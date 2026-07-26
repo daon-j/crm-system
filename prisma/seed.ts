@@ -18,6 +18,28 @@ async function main() {
     },
   });
 
+  await prisma.messageTemplate.upsert({
+    where: { id: "tpl-missed-call-1" },
+    update: {},
+    create: {
+      id: "tpl-missed-call-1",
+      name: "부재중 안내 (1차)",
+      category: "부재중1차",
+      body: "{{고객명}}님, 안내 말씀드리려 연락드렸는데 통화가 어려우셨네요. 편하실 때 회신 부탁드립니다. - {{설계사명}}",
+    },
+  });
+
+  await prisma.messageTemplate.upsert({
+    where: { id: "tpl-missed-call-2" },
+    update: {},
+    create: {
+      id: "tpl-missed-call-2",
+      name: "부재중 안내 (2차)",
+      category: "부재중2차",
+      body: "{{고객명}}님, 다시 한번 연락드렸는데도 통화가 어려우셨네요. 편하신 시간에 회신 주시면 감사하겠습니다. - {{설계사명}}",
+    },
+  });
+
   const visitConfirmTemplate = await prisma.messageTemplate.upsert({
     where: { id: "tpl-visit-confirm" },
     update: {},

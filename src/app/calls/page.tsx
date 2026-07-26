@@ -43,6 +43,7 @@ export default async function CallsPage({
 
       <form
         action={createConsultation}
+        noValidate
         className="rounded-xl border border-slate-200 bg-white p-5 space-y-4 mb-8"
       >
         <div>
@@ -117,9 +118,6 @@ export default async function CallsPage({
               step={1800}
               className="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <p className="text-xs text-slate-400 mt-1">
-              &quot;방문확정&quot; 결과 선택 시 캘린더에 자동 등록됩니다. 시간은 30분 단위로 선택됩니다.
-            </p>
           </div>
         </div>
 

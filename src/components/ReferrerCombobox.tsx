@@ -22,6 +22,7 @@ export default function ReferrerCombobox({
   initialId,
   name = "referredById",
   placeholder = "이름, 전화번호, 초성(ㄱㅊㅅ)으로 검색 (없으면 비워두세요)",
+  onSelect,
 }: {
   customers: ReferrerOption[];
   recentContacts?: RecentContact[];
@@ -32,6 +33,7 @@ export default function ReferrerCombobox({
   initialId?: string | null;
   name?: string;
   placeholder?: string;
+  onSelect?: (customer: ReferrerOption | null) => void;
 }) {
   const initial = customers.find((c) => c.id === initialId) ?? null;
   const [query, setQuery] = useState(initial ? displayLabel(initial) : "");
@@ -97,12 +99,14 @@ export default function ReferrerCombobox({
     setSelectedId(c.id);
     setQuery(displayLabel(c));
     resetFilters();
+    onSelect?.(c);
   }
 
   function clear() {
     setSelectedId(null);
     setQuery("");
     resetFilters();
+    onSelect?.(null);
   }
 
   function badgeClass(c: ReferrerOption): string {

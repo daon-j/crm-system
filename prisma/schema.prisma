@@ -147,8 +147,26 @@ model StudyNote {
   tags      String? // 콤마구분 태그
   createdAt DateTime @default(now())
 
+  attachments NoteAttachment[]
+
   @@index([date])
   @@index([category])
+}
+
+// 학습노트 첨부파일 - 이미지/녹음파일/대본(텍스트)
+model NoteAttachment {
+  id           String    @id @default(cuid())
+  studyNoteId  String
+  studyNote    StudyNote @relation(fields: [studyNoteId], references: [id], onDelete: Cascade)
+  type         String // IMAGE / AUDIO / TRANSCRIPT
+  filePath     String? // IMAGE, AUDIO: 저장된 파일 경로
+  content      String? // TRANSCRIPT: 대본 텍스트 본문 (검색 대상)
+  originalName String
+  mimeType     String?
+  sizeBytes    Int?
+  createdAt    DateTime  @default(now())
+
+  @@index([studyNoteId])
 }
 
 model CalendarEvent {

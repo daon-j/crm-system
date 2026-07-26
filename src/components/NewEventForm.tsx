@@ -38,7 +38,7 @@ export default function NewEventForm({
   return (
     <div className="max-w-xl">
       <h1 className="text-2xl font-bold text-slate-900 mb-6">{TITLE_LABEL[type]}</h1>
-      <form action={action} className="space-y-4">
+      <form action={action} noValidate className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">구분</label>
           <select

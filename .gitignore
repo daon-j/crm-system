@@ -46,5 +46,8 @@ next-env.d.ts
 *.db
 *.db-journal
 
+# 학습노트 첨부파일 (사진/녹음파일, 개인 데이터라 커밋 제외)
+/public/uploads/
+
 # personal/local Claude Code settings (machine-specific)
 .claude/settings.local.json

@@ -54,7 +54,7 @@ export default async function EditCalendarEventPage({
         </div>
       )}
 
-      <form action={boundUpdate} className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
+      <form action={boundUpdate} noValidate className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">구분</label>
           <select

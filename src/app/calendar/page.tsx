@@ -81,6 +81,7 @@ export default async function CalendarPage({
         </summary>
         <form
           action={createEvent}
+          noValidate
           className="mt-3 flex flex-wrap gap-2 items-end rounded-xl border border-slate-200 bg-white p-4"
         >
           <QuickEventFields

@@ -1,18 +1,10 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatDate, toDateInputValue } from "@/lib/format";
 import { createStudyNote, deleteStudyNote } from "@/lib/actions/notes";
-
-const CATEGORY_LABEL: Record<string, string> = {
-  MORNING_MEETING: "정보미팅",
-  MORNING_TRAINING: "오전교육",
-  ETC: "기타",
-};
-
-const CATEGORY_STYLE: Record<string, string> = {
-  MORNING_MEETING: "bg-blue-100 text-blue-700",
-  MORNING_TRAINING: "bg-emerald-100 text-emerald-700",
-  ETC: "bg-slate-100 text-slate-600",
-};
+import { categoryLabel, categoryStyle } from "@/lib/noteCategory";
+import FileAttachDropzone from "@/components/FileAttachDropzone";
+import CategoryChips from "@/components/CategoryChips";
 
 export default async function NotesPage({
   searchParams,
@@ -22,23 +14,34 @@ export default async function NotesPage({
   const { q, category } = await searchParams;
   const query = q?.trim() ?? "";
 
-  const notes = await prisma.studyNote.findMany({
-    where: {
-      AND: [
-        category ? { category } : {},
-        query
-          ? {
-              OR: [
-                { title: { contains: query } },
-                { content: { contains: query } },
-                { tags: { contains: query } },
-              ],
-            }
-          : {},
-      ],
-    },
-    orderBy: { date: "desc" },
-  });
+  const [notes, distinctCategories] = await Promise.all([
+    prisma.studyNote.findMany({
+      where: {
+        AND: [
+          category ? { category } : {},
+          query
+            ? {
+                OR: [
+                  { title: { contains: query } },
+                  { content: { contains: query } },
+                  { tags: { contains: query } },
+                  { attachments: { some: { type: "TRANSCRIPT", content: { contains: query } } } },
+                ],
+              }
+            : {},
+        ],
+      },
+      include: { attachments: { orderBy: { createdAt: "asc" } } },
+      orderBy: { date: "desc" },
+    }),
+    prisma.studyNote.findMany({
+      distinct: ["category"],
+      select: { category: true },
+      orderBy: { category: "asc" },
+    }),
+  ]);
+
+  const categoryLabels = Array.from(new Set(distinctCategories.map((c) => categoryLabel(c.category)))).sort();
 
   return (
     <div className="max-w-3xl">
@@ -55,29 +58,24 @@ export default async function NotesPage({
           action={createStudyNote}
           className="mt-3 space-y-3 rounded-xl border border-slate-200 bg-white p-4"
         >
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-slate-500 mb-1">날짜</label>
-              <input
-                type="date"
-                name="date"
-                required
-                defaultValue={toDateInputValue(new Date())}
-                className="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-slate-500 mb-1">구분</label>
-              <select
-                name="category"
-                defaultValue="MORNING_MEETING"
-                className="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm"
-              >
-                <option value="MORNING_MEETING">정보미팅</option>
-                <option value="MORNING_TRAINING">오전교육</option>
-                <option value="ETC">기타</option>
-              </select>
-            </div>
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">날짜</label>
+            <input
+              type="date"
+              name="date"
+              required
+              defaultValue={toDateInputValue(new Date())}
+              className="w-40 rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">구분</label>
+            <CategoryChips
+              key={`create-cat-${notes.length}`}
+              name="category"
+              options={categoryLabels}
+              defaultValue="정보미팅"
+            />
           </div>
           <div>
             <label className="block text-xs text-slate-500 mb-1">제목</label>
@@ -104,6 +102,9 @@ export default async function NotesPage({
               className="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm"
             />
           </div>
+          <div className="border-t border-slate-100 pt-3">
+            <FileAttachDropzone key={`create-${notes.length}`} />
+          </div>
           <button
             type="submit"
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
@@ -127,9 +128,11 @@ export default async function NotesPage({
           className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
         >
           <option value="">전체</option>
-          <option value="MORNING_MEETING">정보미팅</option>
-          <option value="MORNING_TRAINING">오전교육</option>
-          <option value="ETC">기타</option>
+          {distinctCategories.map((c) => (
+            <option key={c.category} value={c.category}>
+              {categoryLabel(c.category)}
+            </option>
+          ))}
         </select>
         <button
           type="submit"
@@ -145,15 +148,20 @@ export default async function NotesPage({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs text-slate-400">
                 <span>{formatDate(n.date)}</span>
-                <span className={`rounded px-1.5 py-0.5 ${CATEGORY_STYLE[n.category] ?? CATEGORY_STYLE.ETC}`}>
-                  {CATEGORY_LABEL[n.category] ?? n.category}
+                <span className={`rounded px-1.5 py-0.5 ${categoryStyle(n.category)}`}>
+                  {categoryLabel(n.category)}
                 </span>
               </div>
-              <form action={deleteStudyNote.bind(null, n.id)}>
-                <button type="submit" className="text-xs text-slate-400 hover:text-red-600">
-                  삭제
-                </button>
-              </form>
+              <div className="flex items-center gap-2">
+                <Link href={`/notes/${n.id}/edit`} className="text-xs text-slate-400 hover:text-blue-600">
+                  수정
+                </Link>
+                <form action={deleteStudyNote.bind(null, n.id)}>
+                  <button type="submit" className="text-xs text-slate-400 hover:text-red-600">
+                    삭제
+                  </button>
+                </form>
+              </div>
             </div>
             <h3 className="text-sm font-semibold text-slate-900 mt-2">{n.title}</h3>
             <p className="text-sm text-slate-600 mt-1 whitespace-pre-wrap">{n.content}</p>
@@ -166,6 +174,51 @@ export default async function NotesPage({
                 ))}
               </div>
             )}
+
+            {n.attachments.some((a) => a.type === "IMAGE") && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {n.attachments
+                  .filter((a) => a.type === "IMAGE")
+                  .map((a) => (
+                    <a key={a.id} href={a.filePath!} target="_blank" rel="noreferrer">
+                      <img
+                        src={a.filePath!}
+                        alt={a.originalName}
+                        className="h-20 w-20 rounded-lg border border-slate-200 object-cover"
+                      />
+                    </a>
+                  ))}
+              </div>
+            )}
+
+            {n.attachments
+              .filter((a) => a.type === "AUDIO")
+              .map((a) => (
+                <audio key={a.id} controls src={a.filePath!} className="mt-3 h-9 max-w-full" />
+              ))}
+
+            {n.attachments
+              .filter((a) => a.type === "TRANSCRIPT")
+              .map((a) => (
+                <div key={a.id} className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <span className="text-xs font-medium text-slate-500">📝 대본</span>
+                  <p className="text-sm text-slate-600 mt-1 whitespace-pre-wrap">{a.content}</p>
+                </div>
+              ))}
+
+            {n.attachments
+              .filter((a) => a.type === "FILE")
+              .map((a) => (
+                <a
+                  key={a.id}
+                  href={a.filePath!}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-3 flex items-center gap-1.5 text-xs text-blue-600 hover:underline"
+                >
+                  📎 {a.originalName}
+                </a>
+              ))}
           </div>
         ))}
         {notes.length === 0 && (

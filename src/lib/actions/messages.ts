@@ -3,10 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-
-function fillTemplate(body: string, vars: Record<string, string>): string {
-  return body.replace(/{{(.*?)}}/g, (_, key) => vars[key.trim()] ?? `{{${key.trim()}}}`);
-}
+import { fillTemplate } from "@/lib/messageTemplate";
 
 export async function createManualMessage(formData: FormData) {
   const customerId = formData.get("customerId");
