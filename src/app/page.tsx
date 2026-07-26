@@ -258,7 +258,7 @@ export default async function DashboardPage() {
                   </p>
                 )}
 
-                <div className="mt-3 grid grid-cols-2 gap-3 text-xs text-slate-600">
+                <div className="mt-3 grid grid-cols-1 gap-3 text-xs text-slate-600 sm:grid-cols-2">
                   <div>
                     <span className="text-slate-400">가입상품 · </span>
                     {customer && customer.contracts.length > 0
@@ -448,7 +448,8 @@ export default async function DashboardPage() {
             <span className="inline-block h-2 w-2 rounded-full bg-amber-500" /> 만기
           </span>
         </div>
-        <div className="grid grid-cols-7 gap-px rounded-lg border border-slate-200 bg-slate-200 overflow-hidden text-sm">
+        <div className="overflow-x-auto">
+        <div className="grid grid-cols-7 gap-px rounded-lg border border-slate-200 bg-slate-200 overflow-hidden text-sm min-w-[560px]">
           {["일", "월", "화", "수", "목", "금", "토"].map((d) => (
             <div key={d} className="bg-slate-50 px-1 py-1.5 text-center text-xs font-medium text-slate-500">
               {d}
@@ -496,11 +497,12 @@ export default async function DashboardPage() {
             </Fragment>
           ))}
         </div>
+        </div>
       </div>
     ),
 
     statCards: (
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <StatCard
           label="총 고객수"
           value={`${totalCustomers}명`}
@@ -520,7 +522,7 @@ export default async function DashboardPage() {
     ),
 
     threeColumnGrid: (
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <DashboardSection title="오늘 콜 대상" href="/calls" linkLabel="콜 상담하러 가기">
           {uniqueCallTargets.map((c) => (
             <Link
@@ -567,7 +569,7 @@ export default async function DashboardPage() {
     bottomStats: (
       <div className="rounded-xl border border-slate-200 bg-white p-5">
         <h2 className="text-sm font-semibold text-slate-900 mb-4">통계</h2>
-        <div className="grid grid-cols-3 gap-6 text-sm">
+        <div className="grid grid-cols-1 gap-6 text-sm sm:grid-cols-3">
           <div>
             <p className="text-slate-400 mb-1.5">등급별 고객</p>
             <p className="text-slate-700">

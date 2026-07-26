@@ -17,7 +17,7 @@ export default function ImportForm({ batches }: { batches: { id: string; name: s
           <p className="text-xs text-slate-400 mb-3">
             이 파일의 고객들이 속할 배치입니다. 기존 배치를 고르거나 새 배치명을 입력하세요 (필수).
           </p>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">기존 배치 선택</label>
               <select

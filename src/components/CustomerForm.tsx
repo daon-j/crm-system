@@ -56,7 +56,7 @@ export default function CustomerForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
             생년월일 <span className="text-red-500">*</span>
@@ -84,7 +84,7 @@ export default function CustomerForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
             성별 <span className="text-red-500">*</span>
@@ -136,7 +136,7 @@ export default function CustomerForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
             직업 <span className="text-red-500">*</span>
@@ -205,7 +205,7 @@ export default function CustomerForm({
         <p className="text-xs text-slate-400 mb-3">
           매월 받는 고객 리스트 단위입니다. 기존 배치를 고르거나, 새 배치명을 직접 입력하면 자동으로 만들어집니다. 선택사항입니다.
         </p>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">기존 배치 선택</label>
             <select
@@ -256,7 +256,7 @@ export default function CustomerForm({
             등록 전에 이미 가입돼 있던 상품이 있으면 입력하세요. 원수사(예: DB손해보험) 기존 계약처럼, 설계사가 아직 체결하지 않은 상품입니다.
             없으면 비워두고, 나중에 직접 체결한 계약은 고객 상세페이지에서 &quot;+ 계약 추가&quot;로 등록하세요.
           </p>
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 gap-4 mb-4 sm:grid-cols-2">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">보험사</label>
               <input
@@ -277,7 +277,7 @@ export default function CustomerForm({
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">가입일</label>
               <input

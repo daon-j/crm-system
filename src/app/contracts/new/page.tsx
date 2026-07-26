@@ -53,7 +53,7 @@ export default async function NewContractPage({
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
               보험사 <span className="text-red-500">*</span>
@@ -101,7 +101,7 @@ export default async function NewContractPage({
           </select>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
               가입일 <span className="text-red-500">*</span>

@@ -133,7 +133,7 @@ export default async function CustomerDetailPage({
       {/* 기본정보 */}
       <section className="rounded-xl border border-slate-200 bg-white p-5 mb-6">
         <h2 className="text-sm font-semibold text-slate-900 mb-4">기본정보</h2>
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+        <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
           <InfoRow label="성별" value={customer.gender ?? "-"} />
           <InfoRow label="주민등록번호" value={maskResidentNumber(customer.residentNumber)} />
           <InfoRow label="생년월일" value={formatDate(customer.birthDate)} />

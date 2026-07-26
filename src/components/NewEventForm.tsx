@@ -99,7 +99,7 @@ export default function NewEventForm({
         </div>
 
         {type === "VISIT" && (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">동반자</label>
               <input

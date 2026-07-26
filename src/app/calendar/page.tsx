@@ -99,7 +99,8 @@ export default async function CalendarPage({
         </form>
       </details>
 
-      <div className="grid grid-cols-7 gap-px rounded-xl border border-slate-200 bg-slate-200 overflow-hidden text-sm">
+      <div className="overflow-x-auto">
+      <div className="grid grid-cols-7 gap-px rounded-xl border border-slate-200 bg-slate-200 overflow-hidden text-sm min-w-[700px]">
         {["일", "월", "화", "수", "목", "금", "토"].map((d) => (
           <div key={d} className="bg-slate-50 px-2 py-2 text-center text-xs font-medium text-slate-500">
             {d}
@@ -149,6 +150,7 @@ export default async function CalendarPage({
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );

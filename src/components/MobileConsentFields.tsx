@@ -22,7 +22,7 @@ export default function MobileConsentFields({
       <p className="text-xs text-amber-800 mb-3">
         동의해야 내부 시스템에서 고객정보 조회 및 가입설계가 가능합니다. 방문 시(또는 방문 전) 꼭 확인하세요.
       </p>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">동의 여부</label>
           <select
