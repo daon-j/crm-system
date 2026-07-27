@@ -18,6 +18,7 @@ export default function MessageComposeForm({
   templates,
   contractsByCustomer,
   initialTemplateId,
+  agentVars,
 }: {
   action: (formData: FormData) => void;
   customers: CustomerOption[];
@@ -27,12 +28,15 @@ export default function MessageComposeForm({
   templates: TemplateOption[];
   contractsByCustomer: Record<string, ContractOption[]>;
   initialTemplateId?: string;
+  agentVars: Record<string, string>;
 }) {
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerOption | null>(null);
   const [templateId, setTemplateId] = useState(initialTemplateId ?? "");
   const [contractId, setContractId] = useState("");
   const [specialNote, setSpecialNote] = useState("");
-  const [content, setContent] = useState(() => computeContent(templates, initialTemplateId ?? "", null, [], ""));
+  const [content, setContent] = useState(() =>
+    computeContent(templates, initialTemplateId ?? "", null, [], "", agentVars),
+  );
 
   const contracts = selectedCustomer ? (contractsByCustomer[selectedCustomer.id] ?? []) : [];
   const selectedTemplate = templates.find((t) => t.id === templateId) ?? null;
@@ -48,7 +52,9 @@ export default function MessageComposeForm({
     const nextContractId = next.contractId ?? contractId;
     const nextNote = next.specialNote ?? specialNote;
     const nextContracts = nextCustomer ? (contractsByCustomer[nextCustomer.id] ?? []) : [];
-    setContent(computeContent(templates, nextTemplateId, nextCustomer, nextContracts, nextNote, nextContractId));
+    setContent(
+      computeContent(templates, nextTemplateId, nextCustomer, nextContracts, nextNote, agentVars, nextContractId),
+    );
   }
 
   return (
@@ -178,13 +184,14 @@ function computeContent(
   customer: CustomerOption | null,
   contracts: ContractOption[],
   specialNote: string,
+  agentVars: Record<string, string>,
   contractId = "",
 ): string {
   const template = templates.find((t) => t.id === templateId);
   if (!template) return "";
   let body = fillTemplate(template.body, {
     고객명: customer?.name ?? "고객",
-    설계사명: "담당 설계사",
+    ...agentVars,
   });
   const extras: string[] = [];
   const contract = contracts.find((c) => c.id === contractId);

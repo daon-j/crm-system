@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { requireUser } from "@/lib/auth";
 
 function str(formData: FormData, key: string): string | undefined {
   const v = formData.get(key);
@@ -11,6 +12,8 @@ function str(formData: FormData, key: string): string | undefined {
 }
 
 export async function createContract(formData: FormData) {
+  const user = await requireUser();
+
   const customerId = str(formData, "customerId");
   const insurer = str(formData, "insurer");
   const productName = str(formData, "productName");
@@ -21,6 +24,8 @@ export async function createContract(formData: FormData) {
   if (!customerId || !insurer || !productName || !category || !joinDate || !expiryDate) {
     throw new Error("필수 항목을 모두 입력해주세요");
   }
+
+  await prisma.customer.findFirstOrThrow({ where: { id: customerId, userId: user.id } });
 
   const premiumStr = str(formData, "premium");
   const source = str(formData, "source") === "PRE_EXISTING" ? "PRE_EXISTING" : "AGENT_SALE";
@@ -44,8 +49,9 @@ export async function createContract(formData: FormData) {
 }
 
 export async function updateContractStatus(contractId: string, status: string) {
+  const user = await requireUser();
   const contract = await prisma.contract.update({
-    where: { id: contractId },
+    where: { id: contractId, customer: { userId: user.id } },
     data: { status },
   });
   revalidatePath("/contracts");
@@ -53,7 +59,8 @@ export async function updateContractStatus(contractId: string, status: string) {
 }
 
 export async function deleteContract(contractId: string) {
-  const contract = await prisma.contract.delete({ where: { id: contractId } });
+  const user = await requireUser();
+  const contract = await prisma.contract.delete({ where: { id: contractId, customer: { userId: user.id } } });
   revalidatePath("/contracts");
   revalidatePath(`/customers/${contract.customerId}`);
 }

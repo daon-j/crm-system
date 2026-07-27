@@ -32,11 +32,11 @@ function eachDay(rangeStart: Date, dayCount: number): Date[] {
 
 // 고객별 VISIT 이벤트를 시간순으로 정렬해 몇 번째 방문인지(1차/2차/...) 매핑을 만든다.
 // 완료 여부와 무관하게 예정된 방문도 포함해서 "이번이 몇 번째 만남인지"를 셈한다.
-export async function getVisitSequenceMap(customerIds: string[]): Promise<Map<string, number>> {
+export async function getVisitSequenceMap(customerIds: string[], userId: string): Promise<Map<string, number>> {
   if (customerIds.length === 0) return new Map();
 
   const events = await prisma.calendarEvent.findMany({
-    where: { type: "VISIT", status: "SCHEDULED", customerId: { in: customerIds } },
+    where: { userId, type: "VISIT", status: "SCHEDULED", customerId: { in: customerIds } },
     orderBy: { startAt: "asc" },
     select: { id: true, customerId: true },
   });
@@ -56,18 +56,19 @@ export async function getVisitSequenceMap(customerIds: string[]): Promise<Map<st
 export async function getCalendarItems(
   rangeStart: Date,
   rangeEnd: Date,
+  userId: string,
 ): Promise<Map<string, DayItem[]>> {
   const dayCount = Math.round((rangeEnd.getTime() - rangeStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
   const days = eachDay(rangeStart, dayCount);
 
   const [events, customers, contracts] = await Promise.all([
     prisma.calendarEvent.findMany({
-      where: { status: "SCHEDULED", startAt: { gte: rangeStart, lte: rangeEnd } },
+      where: { userId, status: "SCHEDULED", startAt: { gte: rangeStart, lte: rangeEnd } },
       include: { customer: true },
     }),
-    prisma.customer.findMany({ where: { birthDate: { not: null } } }),
+    prisma.customer.findMany({ where: { userId, birthDate: { not: null } } }),
     prisma.contract.findMany({
-      where: { status: "ACTIVE", expiryDate: { gte: rangeStart, lte: rangeEnd } },
+      where: { status: "ACTIVE", expiryDate: { gte: rangeStart, lte: rangeEnd }, customer: { userId } },
       include: { customer: true },
     }),
   ]);
@@ -75,7 +76,7 @@ export async function getCalendarItems(
   const visitCustomerIds = Array.from(
     new Set(events.filter((e) => e.type === "VISIT" && e.customerId).map((e) => e.customerId as string)),
   );
-  const visitSeqMap = await getVisitSequenceMap(visitCustomerIds);
+  const visitSeqMap = await getVisitSequenceMap(visitCustomerIds, userId);
 
   const itemsByDay = new Map<string, DayItem[]>();
   const pushItem = (d: Date, item: DayItem) => {

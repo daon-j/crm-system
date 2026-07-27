@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { requireUser } from "@/lib/auth";
+import { agentVars } from "@/lib/messageTemplate";
 
 function str(formData: FormData, key: string): string | undefined {
   const v = formData.get(key);
@@ -15,6 +17,8 @@ function fillTemplate(body: string, vars: Record<string, string>): string {
 }
 
 export async function createConsultation(formData: FormData) {
+  const user = await requireUser();
+
   const customerId = str(formData, "customerId");
   const content = str(formData, "content");
   if (!customerId || !content) throw new Error("고객과 상담내용은 필수입니다");
@@ -23,13 +27,13 @@ export async function createConsultation(formData: FormData) {
   const nextContactDateStr = str(formData, "nextContactDate");
   const visitDateStr = str(formData, "visitDate");
 
-  const customer = await prisma.customer.findUniqueOrThrow({
-    where: { id: customerId },
+  const customer = await prisma.customer.findFirstOrThrow({
+    where: { id: customerId, userId: user.id },
   });
 
   const resultType = resultTypeId
-    ? await prisma.callResultType.findUnique({
-        where: { id: resultTypeId },
+    ? await prisma.callResultType.findFirst({
+        where: { id: resultTypeId, OR: [{ userId: null }, { userId: user.id }] },
         include: { messageTemplate: true },
       })
     : null;
@@ -47,7 +51,7 @@ export async function createConsultation(formData: FormData) {
   if (resultType?.messageTemplate) {
     const filled = fillTemplate(resultType.messageTemplate.body, {
       고객명: customer.name,
-      설계사명: "담당 설계사",
+      ...agentVars(user),
       방문일시: visitDateStr
         ? new Date(visitDateStr).toLocaleString("ko-KR", {
             month: "long",
@@ -60,6 +64,7 @@ export async function createConsultation(formData: FormData) {
 
     await prisma.message.create({
       data: {
+        userId: user.id,
         customerId,
         templateId: resultType.messageTemplate.id,
         content: filled,
@@ -72,6 +77,7 @@ export async function createConsultation(formData: FormData) {
   if (resultType?.createsCalendarEvent && visitDateStr) {
     await prisma.calendarEvent.create({
       data: {
+        userId: user.id,
         title: `${customer.name} 고객 방문`,
         type: "VISIT",
         startAt: new Date(visitDateStr),

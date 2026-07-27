@@ -4,6 +4,8 @@ import ExcelJS from "exceljs";
 import { prisma } from "@/lib/prisma";
 import { resolveBatchId } from "@/lib/batch";
 import { revalidatePath } from "next/cache";
+import { requireUser } from "@/lib/auth";
+import { encrypt } from "@/lib/encryption";
 
 export type ImportState = {
   ready: boolean;
@@ -67,12 +69,14 @@ export async function importCustomers(
   _prevState: ImportState,
   formData: FormData,
 ): Promise<ImportState> {
+  const user = await requireUser();
+
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
     return { ready: true, successCount: 0, errors: [{ row: 0, reason: "엑셀 파일을 선택해주세요" }] };
   }
 
-  const batchId = await resolveBatchId(formData);
+  const batchId = await resolveBatchId(formData, user.id);
   if (!batchId) {
     return {
       ready: true,
@@ -117,7 +121,7 @@ export async function importCustomers(
   }
 
   const existingPhones = new Set(
-    (await prisma.customer.findMany({ select: { phone: true } }))
+    (await prisma.customer.findMany({ where: { userId: user.id }, select: { phone: true } }))
       .map((c) => c.phone)
       .filter((p): p is string => !!p),
   );
@@ -200,9 +204,10 @@ export async function importCustomers(
 
     const customer = await prisma.customer.create({
       data: {
+        userId: user.id,
         name: record.name,
         gender: record.gender,
-        residentNumber: record.residentNumber,
+        residentNumber: encrypt(record.residentNumber),
         birthDate,
         phone: record.phone,
         address: record.address,

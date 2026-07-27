@@ -4,15 +4,16 @@ import { formatDate } from "@/lib/format";
 export type RecentContact = { id: string; label: string };
 
 // 최근 콜상담/방문 일정에 등장한 고객을 최신순으로 중복없이 반환 (소개자·수신자 선택 시 빠른 선택용)
-export async function getRecentContacts(limit = 5): Promise<RecentContact[]> {
+export async function getRecentContacts(userId: string, limit = 5): Promise<RecentContact[]> {
   const [consultations, events] = await Promise.all([
     prisma.consultation.findMany({
+      where: { customer: { userId } },
       orderBy: { createdAt: "desc" },
       take: limit * 3,
       select: { customerId: true, createdAt: true, customer: { select: { name: true } } },
     }),
     prisma.calendarEvent.findMany({
-      where: { customerId: { not: null }, status: "SCHEDULED" },
+      where: { userId, customerId: { not: null }, status: "SCHEDULED" },
       orderBy: { startAt: "desc" },
       take: limit * 3,
       select: { customerId: true, startAt: true, customer: { select: { name: true } } },

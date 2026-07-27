@@ -3,9 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { logout } from "@/lib/actions/auth";
 
 const NAV_ITEMS = [
-  { href: "/", label: "대시보드", icon: "🏠" },
+  { href: "/", label: "홈", icon: "🏠" },
   { href: "/customers", label: "고객관리", icon: "👥" },
   { href: "/calls", label: "콜 상담", icon: "📞" },
   { href: "/messages", label: "문자함", icon: "✉️" },
@@ -15,14 +16,23 @@ const NAV_ITEMS = [
   { href: "/settings", label: "설정", icon: "⚙️" },
 ] as const;
 
-export default function Sidebar() {
+export default function Sidebar({
+  userName,
+  userEmail,
+}: {
+  userName: string | null;
+  userEmail: string;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const userLabel = userName ? `${userName} 설계사` : userEmail;
 
   return (
     <>
       <div className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 lg:hidden">
-        <span className="font-bold text-lg text-slate-900">보험CRM</span>
+        <Link href="/" className="font-bold text-lg text-slate-900">
+          보험CRM
+        </Link>
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -47,7 +57,9 @@ export default function Sidebar() {
         }`}
       >
         <div className="h-16 flex items-center justify-between px-5 border-b border-slate-200">
-          <span className="font-bold text-lg text-slate-900">보험CRM</span>
+          <Link href="/" onClick={() => setOpen(false)} className="font-bold text-lg text-slate-900">
+            보험CRM
+          </Link>
           <button
             type="button"
             onClick={() => setOpen(false)}
@@ -83,6 +95,18 @@ export default function Sidebar() {
             })}
           </ul>
         </nav>
+        <div className="border-t border-slate-200 p-3">
+          <p className="truncate px-2 py-1 text-xs text-slate-400">{userLabel}</p>
+          <form action={logout}>
+            <button
+              type="submit"
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            >
+              <span aria-hidden>🚪</span>
+              로그아웃
+            </button>
+          </form>
+        </div>
       </aside>
     </>
   );

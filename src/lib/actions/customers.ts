@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { resolveBatchId } from "@/lib/batch";
+import { requireUser } from "@/lib/auth";
+import { encrypt } from "@/lib/encryption";
 
 function str(formData: FormData, key: string): string | undefined {
   const v = formData.get(key);
@@ -26,7 +28,14 @@ function parseMobileConsent(formData: FormData): { mobileConsent: boolean; mobil
   };
 }
 
+async function assertOwnsCustomer(customerId: string, userId: string) {
+  const owned = await prisma.customer.findFirst({ where: { id: customerId, userId }, select: { id: true } });
+  if (!owned) throw new Error("고객을 찾을 수 없습니다");
+}
+
 export async function createCustomer(formData: FormData) {
+  const user = await requireUser();
+
   const name = str(formData, "name");
   const birthDate = str(formData, "birthDate");
   const phone = str(formData, "phone");
@@ -47,14 +56,23 @@ export async function createCustomer(formData: FormData) {
 
   const { mobileConsent, mobileConsentDate } = parseMobileConsent(formData);
 
-  const batchId = await resolveBatchId(formData);
-  const referredById = str(formData, "referredById") ?? null;
+  const batchId = await resolveBatchId(formData, user.id);
+  const referredByIdRaw = str(formData, "referredById") ?? null;
+  let referredById: string | null = null;
+  if (referredByIdRaw) {
+    const referrer = await prisma.customer.findFirst({
+      where: { id: referredByIdRaw, userId: user.id },
+      select: { id: true },
+    });
+    referredById = referrer ? referrer.id : null;
+  }
 
   const customer = await prisma.customer.create({
     data: {
+      userId: user.id,
       name,
       gender,
-      residentNumber,
+      residentNumber: encrypt(residentNumber),
       birthDate: new Date(birthDate),
       phone,
       address,
@@ -94,6 +112,9 @@ export async function createCustomer(formData: FormData) {
 }
 
 export async function updateCustomer(customerId: string, formData: FormData) {
+  const user = await requireUser();
+  await assertOwnsCustomer(customerId, user.id);
+
   const name = str(formData, "name");
   const birthDate = str(formData, "birthDate");
   const phone = str(formData, "phone");
@@ -107,16 +128,23 @@ export async function updateCustomer(customerId: string, formData: FormData) {
 
   const { mobileConsent, mobileConsentDate } = parseMobileConsent(formData);
 
-  const batchId = await resolveBatchId(formData);
+  const batchId = await resolveBatchId(formData, user.id);
   const referredByIdRaw = str(formData, "referredById") ?? null;
-  const referredById = referredByIdRaw === customerId ? null : referredByIdRaw;
+  let referredById: string | null = null;
+  if (referredByIdRaw && referredByIdRaw !== customerId) {
+    const referrer = await prisma.customer.findFirst({
+      where: { id: referredByIdRaw, userId: user.id },
+      select: { id: true },
+    });
+    referredById = referrer ? referrer.id : null;
+  }
 
   await prisma.customer.update({
     where: { id: customerId },
     data: {
       name,
       gender,
-      residentNumber,
+      residentNumber: encrypt(residentNumber),
       birthDate: new Date(birthDate),
       phone,
       address,
@@ -138,12 +166,18 @@ export async function updateCustomer(customerId: string, formData: FormData) {
 }
 
 export async function deleteCustomer(customerId: string) {
+  const user = await requireUser();
+  await assertOwnsCustomer(customerId, user.id);
+
   await prisma.customer.delete({ where: { id: customerId } });
   revalidatePath("/customers");
   redirect("/customers");
 }
 
 export async function addFamilyMember(customerId: string, formData: FormData) {
+  const user = await requireUser();
+  await assertOwnsCustomer(customerId, user.id);
+
   const relation = str(formData, "relation");
   if (!relation) throw new Error("관계는 필수입니다");
 
@@ -161,6 +195,9 @@ export async function addFamilyMember(customerId: string, formData: FormData) {
 }
 
 export async function deleteFamilyMember(customerId: string, familyId: string) {
-  await prisma.family.delete({ where: { id: familyId } });
+  const user = await requireUser();
+  await assertOwnsCustomer(customerId, user.id);
+
+  await prisma.family.delete({ where: { id: familyId, customerId } });
   revalidatePath(`/customers/${customerId}`);
 }

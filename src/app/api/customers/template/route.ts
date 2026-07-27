@@ -1,4 +1,5 @@
 import ExcelJS from "exceljs";
+import { getCurrentUser } from "@/lib/auth";
 
 const REQUIRED_HEADERS = ["이름", "생년월일", "연락처", "주소", "직업", "성별", "주민등록번호"];
 const OPTIONAL_HEADERS = [
@@ -15,6 +16,9 @@ const OPTIONAL_HEADERS = [
 ];
 
 export async function GET() {
+  const user = await getCurrentUser();
+  if (!user) return new Response("Unauthorized", { status: 401 });
+
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("고객DB");
 

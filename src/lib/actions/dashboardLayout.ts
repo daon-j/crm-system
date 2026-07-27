@@ -2,9 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { getDashboardLayout, saveDashboardLayout, type DashboardSectionKey } from "@/lib/dashboardLayout";
+import { requireUser } from "@/lib/auth";
 
 export async function moveDashboardSection(key: DashboardSectionKey, direction: "up" | "down") {
-  const layout = await getDashboardLayout();
+  const user = await requireUser();
+  const layout = await getDashboardLayout(user.id);
   const idx = layout.order.indexOf(key);
   if (idx === -1) return;
 
@@ -14,18 +16,19 @@ export async function moveDashboardSection(key: DashboardSectionKey, direction: 
   const order = [...layout.order];
   [order[idx], order[swapIdx]] = [order[swapIdx], order[idx]];
 
-  await saveDashboardLayout({ ...layout, order });
+  await saveDashboardLayout({ ...layout, order }, user.id);
   revalidatePath("/");
   revalidatePath("/settings");
 }
 
 export async function toggleDashboardSection(key: DashboardSectionKey) {
-  const layout = await getDashboardLayout();
+  const user = await requireUser();
+  const layout = await getDashboardLayout(user.id);
   const hidden = layout.hidden.includes(key)
     ? layout.hidden.filter((h) => h !== key)
     : [...layout.hidden, key];
 
-  await saveDashboardLayout({ ...layout, hidden });
+  await saveDashboardLayout({ ...layout, hidden }, user.id);
   revalidatePath("/");
   revalidatePath("/settings");
 }

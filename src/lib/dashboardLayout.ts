@@ -25,8 +25,8 @@ function isValidKey(k: string): k is DashboardSectionKey {
   return (DEFAULT_ORDER as string[]).includes(k);
 }
 
-export async function getDashboardLayout(): Promise<DashboardLayout> {
-  const row = await prisma.appSetting.findUnique({ where: { key: SETTING_KEY } });
+export async function getDashboardLayout(userId: string): Promise<DashboardLayout> {
+  const row = await prisma.appSetting.findUnique({ where: { userId_key: { userId, key: SETTING_KEY } } });
   if (!row) return { order: DEFAULT_ORDER, hidden: [] };
 
   try {
@@ -44,11 +44,11 @@ export async function getDashboardLayout(): Promise<DashboardLayout> {
   }
 }
 
-export async function saveDashboardLayout(layout: DashboardLayout): Promise<void> {
+export async function saveDashboardLayout(layout: DashboardLayout, userId: string): Promise<void> {
   const value = JSON.stringify(layout);
   await prisma.appSetting.upsert({
-    where: { key: SETTING_KEY },
+    where: { userId_key: { userId, key: SETTING_KEY } },
     update: { value },
-    create: { key: SETTING_KEY, value },
+    create: { key: SETTING_KEY, value, userId },
   });
 }
