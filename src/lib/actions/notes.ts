@@ -35,8 +35,8 @@ export async function createStudyNote(formData: FormData) {
   });
 
   const files = formData.getAll("files").filter((f): f is File => f instanceof File);
-  await saveNoteAttachmentsFromFiles(note.id, files);
-  await syncStudyNoteToNotion(note);
+  const attachments = await saveNoteAttachmentsFromFiles(note.id, files);
+  await syncStudyNoteToNotion(note, attachments);
 
   revalidatePath("/notes");
 }

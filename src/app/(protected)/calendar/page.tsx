@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { createEvent } from "@/lib/actions/calendar";
+import { createEvent, setRoutineAttendance } from "@/lib/actions/calendar";
 import { getCalendarItems, dateKey, TYPE_STYLE } from "@/lib/calendarData";
 import { getRecentContacts } from "@/lib/recentContacts";
 import { getCurrentMonthBatch } from "@/lib/currentMonthBatch";
@@ -127,6 +127,23 @@ export default async function CalendarPage({
               </div>
               <div className="flex flex-col gap-0.5">
                 {items.map((item) => {
+                  if (item.type === "ROUTINE") {
+                    return (
+                      <form key={item.key} action={setRoutineAttendance.bind(null, item.routineDate!, item.routineType!, !item.attended)}>
+                        <button
+                          type="submit"
+                          className={`block w-full truncate rounded px-1 py-0.5 text-left text-[11px] ${
+                            item.attended
+                              ? "bg-emerald-100 text-emerald-700 line-through"
+                              : TYPE_STYLE[item.type]
+                          }`}
+                        >
+                          {item.attended ? "✓ " : ""}
+                          {item.label}
+                        </button>
+                      </form>
+                    );
+                  }
                   const content = (
                     <span
                       className={`block truncate rounded px-1 py-0.5 text-[11px] ${TYPE_STYLE[item.type]}`}

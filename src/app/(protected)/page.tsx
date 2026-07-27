@@ -4,8 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { formatDate, formatTime, formatPhone } from "@/lib/format";
 import { getCalendarItems, getVisitSequenceMap, dateKey, TYPE_STYLE } from "@/lib/calendarData";
 import { createTodo, toggleTodo, deleteTodo } from "@/lib/actions/todos";
+import { setRoutineAttendance } from "@/lib/actions/calendar";
 import { getDashboardLayout, type DashboardSectionKey } from "@/lib/dashboardLayout";
 import { requireUser } from "@/lib/auth";
+import VisitPrepModal from "@/components/VisitPrepModal";
 
 const TYPE_PRIORITY: Record<string, number> = {
   VISIT: 0,
@@ -180,6 +182,10 @@ export default async function DashboardPage() {
             const seq = visitSeqMap.get(e.id);
             const hasContract = !!customer && customer.contracts.some((c) => c.source === "AGENT_SALE");
             const hasReferred = !!customer && customer.referrals.length > 0;
+            const prepItems = (e.prepNote ?? "")
+              .split("\n")
+              .map((s) => s.trim())
+              .filter(Boolean);
             return (
               <div key={e.id} className="rounded-xl border-2 border-blue-200 bg-blue-50/50 p-5">
                 <div className="flex items-start justify-between gap-4">
@@ -240,12 +246,15 @@ export default async function DashboardPage() {
                   </div>
                   <div className="shrink-0 flex flex-col items-end gap-1.5">
                     {customer && (
-                      <Link
-                        href={`/customers/${customer.id}`}
-                        className="rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-blue-700 whitespace-nowrap"
-                      >
-                        방문 준비하기 →
-                      </Link>
+                      <VisitPrepModal
+                        customerName={customer.name}
+                        seq={seq}
+                        phone={formatPhone(customer.phone)}
+                        address={customer.address ?? "-"}
+                        products={customer.contracts.map((c) => c.productName)}
+                        mobileConsentText={customer.mobileConsent ? "동의함" : "동의안함"}
+                        visitNote={e.prepNote}
+                      />
                     )}
                     <Link
                       href={`/calendar/${e.id}/edit`}
@@ -260,6 +269,13 @@ export default async function DashboardPage() {
                   <p className="mt-3 rounded-lg bg-white px-3 py-2 text-sm text-slate-700">
                     <span className="text-slate-400">방문목적 · </span>
                     {e.memo}
+                  </p>
+                )}
+
+                {prepItems.length > 0 && (
+                  <p className="mt-3 rounded-lg bg-white px-3 py-2 text-sm text-slate-700">
+                    <span className="text-slate-400">준비물 · </span>
+                    {prepItems.join(", ")}
                   </p>
                 )}
 
@@ -418,12 +434,27 @@ export default async function DashboardPage() {
                   {e.area ? `${e.area} · ` : ""}
                   {customer?.address ?? ""}
                 </span>
-                <Link
-                  href={`/calendar/${e.id}/edit`}
-                  className="shrink-0 text-xs font-medium text-slate-500 hover:text-blue-600 hover:underline whitespace-nowrap"
-                >
-                  수정
-                </Link>
+                <div className="shrink-0 flex items-center gap-2.5 whitespace-nowrap">
+                  {customer && (
+                    <VisitPrepModal
+                      customerName={customer.name}
+                      seq={seq}
+                      phone={formatPhone(customer.phone)}
+                      address={customer.address ?? "-"}
+                      products={customer.contracts.map((c) => c.productName)}
+                      mobileConsentText={customer.mobileConsent ? "동의함" : "동의안함"}
+                      visitNote={e.prepNote}
+                      triggerLabel="준비물"
+                      triggerClassName="text-xs font-medium text-slate-500 hover:text-blue-600 hover:underline"
+                    />
+                  )}
+                  <Link
+                    href={`/calendar/${e.id}/edit`}
+                    className="text-xs font-medium text-slate-500 hover:text-blue-600 hover:underline"
+                  >
+                    수정
+                  </Link>
+                </div>
               </div>
             );
           })}
@@ -452,6 +483,9 @@ export default async function DashboardPage() {
           <span className="flex items-center gap-1">
             <span className="inline-block h-2 w-2 rounded-full bg-amber-500" /> 만기
           </span>
+          <span className="flex items-center gap-1">
+            <span className="inline-block h-2 w-2 rounded-full bg-slate-400" /> 정보미팅·오전교육 (탭해서 참석 체크)
+          </span>
         </div>
         <div className="overflow-x-auto">
         <div className="grid grid-cols-7 gap-px rounded-lg border border-slate-200 bg-slate-200 overflow-hidden text-sm min-w-[560px]">
@@ -465,12 +499,16 @@ export default async function DashboardPage() {
               {week.days.map((d) => {
                 const isToday = dateKey(d) === dateKey(now);
                 const isCurrentWeek = week.label === "이번주";
-                const items = (miniItemsByDay.get(dateKey(d)) ?? [])
+                const dayItems = miniItemsByDay.get(dateKey(d)) ?? [];
+                // 정보미팅/오전교육은 항상 노출(전체 캘린더와 동일하게 매일 탭 가능해야 함). 나머지 일정만 상위 2개로 제한.
+                const routineItems = dayItems.filter((i) => i.type === "ROUTINE");
+                const otherItems = dayItems
                   .filter((i) => i.type !== "ROUTINE")
                   .sort((a, b) => TYPE_PRIORITY[a.type] - TYPE_PRIORITY[b.type]);
-                const visibleItems = items.slice(0, 2);
-                const extraCount = items.length - visibleItems.length;
-                const hasVisit = items.some((i) => i.type === "VISIT");
+                const visibleOtherItems = otherItems.slice(0, 2);
+                const extraCount = otherItems.length - visibleOtherItems.length;
+                const visibleItems = [...visibleOtherItems, ...routineItems];
+                const hasVisit = otherItems.some((i) => i.type === "VISIT");
                 return (
                   <div
                     key={dateKey(d)}
@@ -481,6 +519,24 @@ export default async function DashboardPage() {
                     </div>
                     <div className="flex flex-col gap-0.5">
                       {visibleItems.map((item) => {
+                        if (item.type === "ROUTINE") {
+                          return (
+                            <form
+                              key={item.key}
+                              action={setRoutineAttendance.bind(null, item.routineDate!, item.routineType!, !item.attended)}
+                            >
+                              <button
+                                type="submit"
+                                className={`block w-full truncate rounded px-1 py-0.5 text-left text-[10px] ${
+                                  item.attended ? "bg-emerald-100 text-emerald-700 line-through" : TYPE_STYLE[item.type]
+                                }`}
+                              >
+                                {item.attended ? "✓ " : ""}
+                                {item.label}
+                              </button>
+                            </form>
+                          );
+                        }
                         const chip = (
                           <span className={`block truncate rounded px-1 py-0.5 text-[10px] ${TYPE_STYLE[item.type]}`}>
                             {item.label}

@@ -7,7 +7,14 @@ export type DayItem = {
   type: "ROUTINE" | "VISIT" | "TRAINING" | "CUSTOM" | "BIRTHDAY" | "EXPIRY";
   href?: string;
   eventId?: string;
+  // ROUTINE(정보미팅/오전교육) 전용 - 참석 여부 및 토글에 필요한 정보
+  attended?: boolean;
+  routineDate?: string;
+  routineType?: "MEETING" | "TRAINING";
 };
+
+const MEETING_CATEGORIES = ["정보미팅", "MORNING_MEETING"];
+const TRAINING_CATEGORIES = ["오전교육", "MORNING_TRAINING"];
 
 export const TYPE_STYLE: Record<DayItem["type"], string> = {
   ROUTINE: "bg-slate-100 text-slate-500",
@@ -61,7 +68,7 @@ export async function getCalendarItems(
   const dayCount = Math.round((rangeEnd.getTime() - rangeStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
   const days = eachDay(rangeStart, dayCount);
 
-  const [events, customers, contracts] = await Promise.all([
+  const [events, customers, contracts, routineNotes, routineOverrides] = await Promise.all([
     prisma.calendarEvent.findMany({
       where: { userId, status: "SCHEDULED", startAt: { gte: rangeStart, lte: rangeEnd } },
       include: { customer: true },
@@ -71,7 +78,29 @@ export async function getCalendarItems(
       where: { status: "ACTIVE", expiryDate: { gte: rangeStart, lte: rangeEnd }, customer: { userId } },
       include: { customer: true },
     }),
+    prisma.studyNote.findMany({
+      where: { userId, date: { gte: rangeStart, lte: rangeEnd } },
+      select: { date: true, category: true },
+    }),
+    prisma.routineAttendance.findMany({
+      where: { userId, date: { gte: rangeStart, lte: rangeEnd } },
+    }),
   ]);
+
+  const meetingNoteDays = new Set(
+    routineNotes.filter((n) => MEETING_CATEGORIES.includes(n.category)).map((n) => dateKey(n.date)),
+  );
+  const trainingNoteDays = new Set(
+    routineNotes.filter((n) => TRAINING_CATEGORIES.includes(n.category)).map((n) => dateKey(n.date)),
+  );
+  const overrideByKey = new Map(
+    routineOverrides.map((o) => [`${dateKey(o.date)}-${o.type}`, o.attended]),
+  );
+  function routineAttended(d: Date, type: "MEETING" | "TRAINING") {
+    const key = `${dateKey(d)}-${type}`;
+    if (overrideByKey.has(key)) return overrideByKey.get(key)!;
+    return type === "MEETING" ? meetingNoteDays.has(dateKey(d)) : trainingNoteDays.has(dateKey(d));
+  }
 
   const visitCustomerIds = Array.from(
     new Set(events.filter((e) => e.type === "VISIT" && e.customerId).map((e) => e.customerId as string)),
@@ -88,8 +117,22 @@ export async function getCalendarItems(
   for (const d of days) {
     const day = d.getDay();
     if (day >= 1 && day <= 5) {
-      pushItem(d, { key: `routine-meeting-${dateKey(d)}`, label: "09:40 정보미팅", type: "ROUTINE" });
-      pushItem(d, { key: `routine-training-${dateKey(d)}`, label: "10:20 오전교육", type: "ROUTINE" });
+      pushItem(d, {
+        key: `routine-meeting-${dateKey(d)}`,
+        label: "09:40 정보미팅",
+        type: "ROUTINE",
+        attended: routineAttended(d, "MEETING"),
+        routineDate: dateKey(d),
+        routineType: "MEETING",
+      });
+      pushItem(d, {
+        key: `routine-training-${dateKey(d)}`,
+        label: "10:20 오전교육",
+        type: "ROUTINE",
+        attended: routineAttended(d, "TRAINING"),
+        routineDate: dateKey(d),
+        routineType: "TRAINING",
+      });
     }
   }
 

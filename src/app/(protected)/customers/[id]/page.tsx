@@ -5,6 +5,7 @@ import { formatDate, formatDateTime, formatPhone, daysUntil, maskResidentNumber,
 import { addFamilyMember, deleteFamilyMember, deleteCustomer } from "@/lib/actions/customers";
 import { requireUser } from "@/lib/auth";
 import { decrypt } from "@/lib/encryption";
+import ExpandableNameList from "@/components/ExpandableNameList";
 
 export default async function CustomerDetailPage({
   params,
@@ -173,14 +174,7 @@ export default async function CustomerDetailPage({
         {customer.referrals.length > 0 && (
           <p className="mt-1 text-sm text-slate-600">
             <span className="text-slate-400">이 고객이 소개한 고객 · </span>
-            {customer.referrals.map((r, i) => (
-              <span key={r.id}>
-                {i > 0 && ", "}
-                <Link href={`/customers/${r.id}`} className="text-blue-700 hover:underline">
-                  {r.name}
-                </Link>
-              </span>
-            ))}
+            <ExpandableNameList items={customer.referrals} />
           </p>
         )}
         {customer.memo && (

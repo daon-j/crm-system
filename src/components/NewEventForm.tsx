@@ -131,6 +131,21 @@ export default function NewEventForm({
           />
         </div>
 
+        {type === "VISIT" && (
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">이번 방문 전용 준비물</label>
+            <textarea
+              name="prepNote"
+              rows={2}
+              placeholder="예) 배우자 동반 예정 - 가족관계증명서 필요"
+              className="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <p className="text-xs text-slate-400 mt-1">
+              차수별 공통 준비물과 별개로, 이 방문에서만 필요한 항목을 적어두면 방문 준비 대화상자에 추가로 표시됩니다.
+            </p>
+          </div>
+        )}
+
         <button
           type="submit"
           className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"

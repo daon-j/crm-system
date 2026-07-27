@@ -92,6 +92,13 @@ export default function QuickEventFields({
         <label className="block text-xs text-slate-500 mb-1">메모</label>
         <input name="memo" className="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm" />
       </div>
+
+      {type === "VISIT" && (
+        <div className="flex-1 min-w-[160px]">
+          <label className="block text-xs text-slate-500 mb-1">이번 방문 전용 준비물</label>
+          <input name="prepNote" className="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm" />
+        </div>
+      )}
     </>
   );
 }

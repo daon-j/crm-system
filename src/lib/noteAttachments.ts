@@ -13,18 +13,20 @@ function classify(file: File): "IMAGE" | "AUDIO" | "TRANSCRIPT" | "FILE" {
 
 export async function saveNoteAttachmentsFromFiles(studyNoteId: string, files: File[]) {
   const valid = files.filter((f) => f.size > 0);
-  if (valid.length === 0) return;
+  if (valid.length === 0) return [];
 
   const dir = path.join(UPLOAD_ROOT, studyNoteId);
   const hasBinary = valid.some((f) => classify(f) !== "TRANSCRIPT");
   if (hasBinary) await mkdir(dir, { recursive: true });
+
+  const created = [];
 
   for (const file of valid) {
     const type = classify(file);
 
     if (type === "TRANSCRIPT") {
       const text = await file.text();
-      await prisma.noteAttachment.create({
+      const record = await prisma.noteAttachment.create({
         data: {
           studyNoteId,
           type: "TRANSCRIPT",
@@ -34,6 +36,7 @@ export async function saveNoteAttachmentsFromFiles(studyNoteId: string, files: F
           sizeBytes: file.size,
         },
       });
+      created.push(record);
       continue;
     }
 
@@ -42,7 +45,7 @@ export async function saveNoteAttachmentsFromFiles(studyNoteId: string, files: F
     const buffer = Buffer.from(await file.arrayBuffer());
     await writeFile(path.join(dir, safeName), buffer);
 
-    await prisma.noteAttachment.create({
+    const record = await prisma.noteAttachment.create({
       data: {
         studyNoteId,
         type,
@@ -52,5 +55,8 @@ export async function saveNoteAttachmentsFromFiles(studyNoteId: string, files: F
         sizeBytes: file.size,
       },
     });
+    created.push(record);
   }
+
+  return created;
 }

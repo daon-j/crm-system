@@ -71,3 +71,4 @@ export async function deleteCallResultType(resultTypeId: string) {
   revalidatePath("/settings");
   revalidatePath("/calls");
 }
+

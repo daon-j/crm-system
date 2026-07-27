@@ -20,16 +20,17 @@ model User {
   extension    String?
   createdAt    DateTime @default(now())
 
-  sessions         Session[]
-  customers        Customer[]
-  customerBatches  CustomerBatch[]
-  callResultTypes  CallResultType[]
-  messageTemplates MessageTemplate[]
-  studyNotes       StudyNote[]
-  calendarEvents   CalendarEvent[]
-  messages         Message[]
-  todos            Todo[]
-  appSettings      AppSetting[]
+  sessions           Session[]
+  customers          Customer[]
+  customerBatches    CustomerBatch[]
+  callResultTypes    CallResultType[]
+  messageTemplates   MessageTemplate[]
+  studyNotes         StudyNote[]
+  calendarEvents     CalendarEvent[]
+  messages           Message[]
+  todos              Todo[]
+  appSettings        AppSetting[]
+  routineAttendances RoutineAttendance[]
 }
 
 model Session {
@@ -238,6 +239,7 @@ model CalendarEvent {
   memo       String?
   companion  String? // 동반자 (예: 홍길동 멘토 동반)
   area       String? // 방문 지역/동 (예: 다산동)
+  prepNote   String? // 이번 방문에만 해당하는 준비물/특이사항 (공통 방문준비물 체크리스트와 별개)
   createdAt  DateTime  @default(now())
 
   changeLogs CalendarEventLog[]
@@ -245,6 +247,19 @@ model CalendarEvent {
   @@index([userId])
   @@index([startAt])
   @@index([status])
+}
+
+// 정보미팅/오전교육 참석 수동 기록 - 있으면 자동판단(학습노트 존재여부)보다 우선
+model RoutineAttendance {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date     DateTime
+  type     String // MEETING / TRAINING
+  attended Boolean
+  createdAt DateTime @default(now())
+
+  @@unique([userId, date, type])
 }
 
 // 범용 설정 저장 (key-value) - 대시보드 레이아웃 등, 사용자별로 분리

@@ -38,6 +38,7 @@ export async function createEvent(formData: FormData) {
       memo: str(formData, "memo"),
       companion: str(formData, "companion"),
       area: str(formData, "area"),
+      prepNote: str(formData, "prepNote"),
       customerId,
     },
   });
@@ -69,6 +70,7 @@ export async function updateEvent(eventId: string, formData: FormData) {
       memo: str(formData, "memo") ?? null,
       companion: str(formData, "companion") ?? null,
       area: str(formData, "area") ?? null,
+      prepNote: str(formData, "prepNote") ?? null,
     },
   });
 
@@ -88,6 +90,18 @@ export async function updateEvent(eventId: string, formData: FormData) {
   revalidatePath("/");
   if (event.customerId) revalidatePath(`/customers/${event.customerId}`);
   redirect(event.customerId ? `/customers/${event.customerId}` : "/calendar");
+}
+
+// 정보미팅/오전교육 참석 여부 수동 기록 - 있으면 학습노트 기반 자동판단보다 우선한다.
+export async function setRoutineAttendance(dateStr: string, type: "MEETING" | "TRAINING", attended: boolean) {
+  const user = await requireUser();
+  await prisma.routineAttendance.upsert({
+    where: { userId_date_type: { userId: user.id, date: new Date(dateStr), type } },
+    create: { userId: user.id, date: new Date(dateStr), type, attended },
+    update: { attended },
+  });
+  revalidatePath("/calendar");
+  revalidatePath("/");
 }
 
 // 방문/일정을 취소한다. 데이터는 지우지 않고 상태만 CANCELED로 바꿔서

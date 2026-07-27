@@ -93,7 +93,6 @@ export default async function MessagesPage() {
                 <span className="rounded bg-blue-50 px-1.5 py-0.5 text-blue-700">
                   {m.triggerType}
                 </span>
-                <span>{formatDateTime(m.createdAt)}</span>
               </div>
 
               <form action={updateMessageContent.bind(null, m.id)} className="flex gap-2 items-start">
