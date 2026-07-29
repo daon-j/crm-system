@@ -10,6 +10,8 @@ import CopyButton from "@/components/CopyButton";
 import KakaoShareButton from "@/components/KakaoShareButton";
 import SendCompleteButton from "@/components/SendCompleteButton";
 import { requireUser } from "@/lib/auth";
+import { agentVars, previewFill, sortCategories } from "@/lib/messageTemplate";
+import MessageQuickPicksMobile from "@/components/MessageQuickPicksMobile";
 
 const KAKAO_JS_KEY = process.env.NEXT_PUBLIC_KAKAO_JS_KEY;
 
@@ -38,59 +40,83 @@ export default async function MessagesPage() {
   return (
     <div className="max-w-3xl">
       <div className="flex items-center justify-between mb-1">
-        <h1 className="text-2xl font-bold text-slate-900">문자함</h1>
+        <h1 className="text-2xl font-bold text-ink">문자함</h1>
         <div className="flex gap-2">
           <Link
             href="/messages/new"
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
           >
             + 새 문자 작성
           </Link>
           <form action={runGenerateAutoMessages}>
             <button
               type="submit"
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-ink-2 hover:bg-surface-muted"
             >
               🔄 생일·안부·만기 대상 갱신
             </button>
           </form>
         </div>
       </div>
-      <p className="text-sm text-slate-500 mb-6">
+      <p className="text-sm text-ink-muted mb-6">
         문구를 최종 확인한 뒤 발송하면 발송완료로 이동합니다.
       </p>
 
-      <h2 className="text-sm font-semibold text-slate-900 mb-3">주요 문자 바로가기</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-10">
-        {templates.map((t) => (
-          <Link
-            key={t.id}
-            href={`/messages/new?templateId=${t.id}`}
-            className="rounded-xl border border-slate-200 bg-white p-3.5 hover:border-blue-300 hover:bg-blue-50/40 transition-colors"
-          >
-            <div className="flex items-center gap-1.5 mb-1">
-              <span className="text-sm font-medium text-slate-800">{t.name}</span>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-semibold text-ink">주요 문자 바로가기</h2>
+        <span className="text-xs text-ink-muted hidden lg:inline">예시 고객으로 채운 실제 발송 문구예요</span>
+      </div>
+
+      {/* 모바일: 카테고리 필터 탭 + 세로 1단 카드 */}
+      <div className="lg:hidden mb-10">
+        <MessageQuickPicksMobile
+          templates={templates.map((t) => ({
+            id: t.id,
+            name: t.name,
+            category: t.category,
+            preview: previewFill(t.body, agentVars(user)),
+          }))}
+          categories={sortCategories([...new Set(templates.map((t) => t.category))])}
+        />
+      </div>
+
+      {/* PC: 카테고리별 순차 나열 + 2단 그리드 (기존 그대로) */}
+      <div className="hidden lg:block space-y-6 mb-10">
+        {sortCategories([...new Set(templates.map((t) => t.category))]).map((category) => (
+          <div key={category}>
+            <h3 className="text-xs font-semibold text-ink-muted mb-2">{category}</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {templates
+                .filter((t) => t.category === category)
+                .map((t) => (
+                  <Link
+                    key={t.id}
+                    href={`/messages/new?templateId=${t.id}`}
+                    className="rounded-xl border border-border bg-surface p-3.5 hover:border-primary/40 hover:bg-primary/10 transition-colors"
+                  >
+                    <span className="text-sm font-medium text-ink">{t.name}</span>
+                    <p className="mt-1.5 rounded-lg bg-surface-muted px-2.5 py-2 text-xs leading-relaxed text-ink-2 whitespace-pre-wrap">
+                      {previewFill(t.body, agentVars(user))}
+                    </p>
+                  </Link>
+                ))}
             </div>
-            <span className="inline-block rounded bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-500 mb-1.5">
-              {t.category}
-            </span>
-            <p className="text-xs text-slate-400 line-clamp-2">{t.body}</p>
-          </Link>
+          </div>
         ))}
       </div>
 
-      <h2 className="text-sm font-semibold text-slate-900 mb-3">
+      <h2 className="text-sm font-semibold text-ink mb-3">
         발송대기 {pending.length}건
       </h2>
       <div className="space-y-3 mb-10">
         {pending.map((m) => {
           const phoneDigits = m.customer.phone?.replace(/[^0-9]/g, "");
           return (
-            <div key={m.id} className="rounded-xl border border-slate-200 bg-white p-4">
-              <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
-                <span className="font-medium text-slate-700">{m.customer.name}</span>
+            <div key={m.id} className="rounded-xl border border-border bg-surface p-4">
+              <div className="flex items-center gap-2 text-xs text-ink-muted mb-2">
+                <span className="font-medium text-ink-2">{m.customer.name}</span>
                 {m.customer.phone && <span>{formatPhone(m.customer.phone)}</span>}
-                <span className="rounded bg-blue-50 px-1.5 py-0.5 text-blue-700">
+                <span className="rounded bg-primary/10 px-1.5 py-0.5 text-primary">
                   {m.triggerType}
                 </span>
               </div>
@@ -100,11 +126,11 @@ export default async function MessagesPage() {
                   name="content"
                   defaultValue={m.content}
                   rows={2}
-                  className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 <button
                   type="submit"
-                  className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 whitespace-nowrap"
+                  className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-ink-2 hover:bg-surface-muted whitespace-nowrap"
                 >
                   문구 저장
                 </button>
@@ -114,7 +140,7 @@ export default async function MessagesPage() {
                 {phoneDigits && (
                   <a
                     href={`sms:${phoneDigits}?body=${encodeURIComponent(m.content)}`}
-                    className="rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100"
+                    className="rounded-lg border border-success/30 bg-success-soft px-3.5 py-1.5 text-xs font-medium text-success hover:opacity-90"
                   >
                     📱 문자 앱으로 보내기
                   </a>
@@ -125,7 +151,7 @@ export default async function MessagesPage() {
                 <form action={cancelMessage.bind(null, m.id)}>
                   <button
                     type="submit"
-                    className="rounded-lg border border-slate-200 px-3.5 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50"
+                    className="rounded-lg border border-border px-3.5 py-1.5 text-xs font-medium text-ink-muted hover:bg-surface-muted"
                   >
                     취소
                   </button>
@@ -135,13 +161,13 @@ export default async function MessagesPage() {
           );
         })}
         {pending.length === 0 && (
-          <p className="text-sm text-slate-400">발송 대기중인 문자가 없습니다</p>
+          <p className="text-sm text-ink-muted">발송 대기중인 문자가 없습니다</p>
         )}
       </div>
 
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-semibold text-slate-900">최근 1개월 발송완료 {sent.length}건</h2>
-        <Link href="/messages/history" className="text-xs font-medium text-blue-600 hover:underline">
+        <h2 className="text-sm font-semibold text-ink">최근 1개월 발송완료 {sent.length}건</h2>
+        <Link href="/messages/history" className="text-xs font-medium text-primary hover:underline">
           지난 발송이력 전체보기 →
         </Link>
       </div>
@@ -149,20 +175,20 @@ export default async function MessagesPage() {
         {sent.map((m) => (
           <div
             key={m.id}
-            className="rounded-lg border border-slate-100 bg-slate-50 px-3.5 py-2.5 text-sm"
+            className="rounded-lg border border-border bg-surface-muted px-3.5 py-2.5 text-sm"
           >
-            <div className="flex items-center gap-2 text-xs text-slate-400 mb-1">
-              <span className="font-medium text-slate-600">{m.customer.name}</span>
-              <span className="rounded bg-slate-200 px-1.5 py-0.5 text-slate-500">
+            <div className="flex items-center gap-2 text-xs text-ink-muted mb-1">
+              <span className="font-medium text-ink-2">{m.customer.name}</span>
+              <span className="rounded bg-surface-muted px-1.5 py-0.5 text-ink-muted">
                 {m.triggerType}
               </span>
               <span>{formatDateTime(m.sentAt)} 발송</span>
             </div>
-            <p className="text-slate-600">{m.content}</p>
+            <p className="text-ink-2">{m.content}</p>
           </div>
         ))}
         {sent.length === 0 && (
-          <p className="text-sm text-slate-400">최근 1개월간 발송완료 이력이 없습니다</p>
+          <p className="text-sm text-ink-muted">최근 1개월간 발송완료 이력이 없습니다</p>
         )}
       </div>
     </div>

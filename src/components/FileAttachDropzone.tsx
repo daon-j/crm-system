@@ -54,7 +54,7 @@ export default function FileAttachDropzone({ name = "files" }: { name?: string }
           addFiles(e.dataTransfer.files);
         }}
         className={`cursor-pointer rounded-lg border border-dashed px-4 py-5 text-center text-sm transition-colors ${
-          dragOver ? "border-blue-400 bg-blue-50/50 text-blue-500" : "border-slate-300 text-slate-400 hover:border-slate-400"
+          dragOver ? "border-primary/40 bg-primary/10 text-primary" : "border-border text-ink-muted hover:border-ink-muted"
         }`}
       >
         사진, 녹음파일, 대본파일(.txt)을 끌어다 놓거나 클릭해서 선택하세요
@@ -64,10 +64,10 @@ export default function FileAttachDropzone({ name = "files" }: { name?: string }
           {files.map((f, i) => (
             <span
               key={`${f.name}-${i}`}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1 text-xs text-slate-600"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-surface-muted px-2.5 py-1 text-xs text-ink-2"
             >
               {fileIcon(f)} {f.name}
-              <button type="button" onClick={() => removeFile(i)} className="text-slate-400 hover:text-red-600">
+              <button type="button" onClick={() => removeFile(i)} className="text-ink-muted hover:text-danger">
                 ✕
               </button>
             </span>

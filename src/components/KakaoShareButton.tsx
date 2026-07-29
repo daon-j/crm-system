@@ -53,7 +53,7 @@ export default function KakaoShareButton({
     return (
       <span
         title="카카오 공유 기능을 쓰려면 NEXT_PUBLIC_KAKAO_JS_KEY 환경변수를 설정하세요 (카카오 디벨로퍼스에서 무료 발급)"
-        className="rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-medium text-slate-400"
+        className="rounded-lg border border-border bg-surface-muted px-3.5 py-1.5 text-xs font-medium text-ink-muted"
       >
         💬 카톡 공유 (설정 필요)
       </span>
@@ -87,7 +87,7 @@ export default function KakaoShareButton({
       type="button"
       onClick={handleClick}
       disabled={status === "loading"}
-      className="rounded-lg border border-yellow-300 bg-yellow-50 px-3.5 py-1.5 text-xs font-medium text-yellow-800 hover:bg-yellow-100 disabled:opacity-50"
+      className="rounded-lg border border-accent/40 bg-accent-soft px-3.5 py-1.5 text-xs font-medium text-accent hover:opacity-90 disabled:opacity-50"
     >
       {status === "loading" ? "불러오는 중..." : status === "error" ? "💬 카톡 공유 (실패, 재시도)" : "💬 카톡 공유"}
     </button>

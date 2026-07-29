@@ -2,29 +2,22 @@ import Link from "next/link";
 import { Fragment, type ReactNode } from "react";
 import { prisma } from "@/lib/prisma";
 import { formatDate, formatTime, formatPhone } from "@/lib/format";
-import { getCalendarItems, getVisitSequenceMap, dateKey, TYPE_STYLE } from "@/lib/calendarData";
+import { getCalendarItems, getVisitSequenceMap, dateKey } from "@/lib/calendarData";
 import { createTodo, toggleTodo, deleteTodo } from "@/lib/actions/todos";
-import { setRoutineAttendance } from "@/lib/actions/calendar";
 import { getDashboardLayout, type DashboardSectionKey } from "@/lib/dashboardLayout";
 import { requireUser } from "@/lib/auth";
 import VisitPrepModal from "@/components/VisitPrepModal";
-
-const TYPE_PRIORITY: Record<string, number> = {
-  VISIT: 0,
-  TRAINING: 1,
-  EXPIRY: 2,
-  BIRTHDAY: 3,
-  CUSTOM: 4,
-  ROUTINE: 5,
-};
+import CalendarDayCell from "@/components/CalendarDayCell";
+import { getEnergeticGreeting } from "@/lib/greeting";
 
 const TODO_PRIORITY_ORDER: Record<string, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 };
 const TODO_PRIORITY_LABEL: Record<string, string> = { HIGH: "높음", MEDIUM: "보통", LOW: "낮음" };
 const TODO_PRIORITY_STYLE: Record<string, string> = {
-  HIGH: "bg-red-100 text-red-700",
-  MEDIUM: "bg-amber-100 text-amber-800",
-  LOW: "bg-slate-100 text-slate-500",
+  HIGH: "bg-danger-soft text-danger",
+  MEDIUM: "bg-accent-soft text-accent",
+  LOW: "bg-surface-muted text-ink-muted",
 };
+const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 export default async function DashboardPage() {
   const user = await requireUser();
@@ -162,11 +155,6 @@ export default async function DashboardPage() {
   });
   const miniEnd = miniDays[20];
   const miniItemsByDay = await getCalendarItems(miniStart, miniEnd, user.id);
-  const weekRows = [
-    { label: "지난주", days: miniDays.slice(0, 7) },
-    { label: "이번주", days: miniDays.slice(7, 14) },
-    { label: "다음주", days: miniDays.slice(14, 21) },
-  ];
 
   const sections: Record<DashboardSectionKey, ReactNode> = {
     todayVisits:
@@ -174,7 +162,7 @@ export default async function DashboardPage() {
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <span className="text-lg">🚗</span>
-            <h2 className="text-lg font-bold text-slate-900">오늘의 방문 {todayVisits.length}건</h2>
+            <h2 className="text-lg font-bold text-ink">오늘의 방문 {todayVisits.length}건</h2>
           </div>
           {todayVisits.map((e) => {
             const customer = e.customer;
@@ -187,44 +175,42 @@ export default async function DashboardPage() {
               .map((s) => s.trim())
               .filter(Boolean);
             return (
-              <div key={e.id} className="rounded-xl border-2 border-blue-200 bg-blue-50/50 p-5">
+              <div key={e.id} className="rounded-xl border border-border border-l-4 border-l-info bg-surface p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <div className="flex items-baseline gap-2 flex-wrap">
-                      <span className="text-xl font-bold text-blue-700">{formatTime(e.startAt)}</span>
+                      <span className="text-xl font-bold text-info">{formatTime(e.startAt)}</span>
                       {customer ? (
                         <Link
                           href={`/customers/${customer.id}`}
-                          className="text-lg font-semibold text-slate-900 hover:underline"
+                          className="text-lg font-semibold text-ink hover:underline"
                         >
                           {customer.name} 고객
                         </Link>
                       ) : (
-                        <span className="text-lg font-semibold text-slate-900">{e.title}</span>
+                        <span className="text-lg font-semibold text-ink">{e.title}</span>
                       )}
                       {customer && (
-                        <span className="rounded bg-white px-1.5 py-0.5 text-xs font-medium text-slate-500">
-                          {customer.grade}등급
-                        </span>
+                        <span className="text-xs font-medium text-ink-muted">{customer.grade}등급</span>
                       )}
                       {seq && (
-                        <span className="rounded bg-sky-100 px-1.5 py-0.5 text-xs font-bold text-sky-700">
+                        <span className="rounded bg-info-soft px-1.5 py-0.5 text-xs font-bold text-info">
                           방문{seq}차
                         </span>
                       )}
                       {hasContract && (
-                        <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-xs font-medium text-emerald-700">
+                        <span className="rounded bg-success-soft px-1.5 py-0.5 text-xs font-medium text-success">
                           체결고객
                         </span>
                       )}
                       {hasReferred && (
-                        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-800">
+                        <span className="rounded bg-accent-soft px-1.5 py-0.5 text-xs font-medium text-accent">
                           소개왕
                         </span>
                       )}
                     </div>
                     {customer && (
-                      <p className="text-sm text-slate-500 mt-0.5">
+                      <p className="text-sm text-ink-muted mt-0.5">
                         {formatPhone(customer.phone)}
                         {customer.address ? ` · ${customer.address}` : ""}
                       </p>
@@ -232,12 +218,12 @@ export default async function DashboardPage() {
                     {(e.area || e.companion) && (
                       <div className="flex gap-1.5 mt-1.5">
                         {e.area && (
-                          <span className="rounded bg-white px-1.5 py-0.5 text-[11px] font-medium text-slate-500">
+                          <span className="rounded bg-surface-muted px-1.5 py-0.5 text-[11px] font-medium text-ink-2">
                             📍 {e.area}
                           </span>
                         )}
                         {e.companion && (
-                          <span className="rounded bg-white px-1.5 py-0.5 text-[11px] font-medium text-slate-500">
+                          <span className="rounded bg-surface-muted px-1.5 py-0.5 text-[11px] font-medium text-ink-2">
                             👥 {e.companion} 동반
                           </span>
                         )}
@@ -258,7 +244,7 @@ export default async function DashboardPage() {
                     )}
                     <Link
                       href={`/calendar/${e.id}/edit`}
-                      className="text-xs font-medium text-slate-500 hover:text-blue-600 hover:underline whitespace-nowrap"
+                      className="text-xs font-medium text-ink-muted hover:text-primary hover:underline whitespace-nowrap"
                     >
                       일정 변경
                     </Link>
@@ -266,28 +252,28 @@ export default async function DashboardPage() {
                 </div>
 
                 {e.memo && (
-                  <p className="mt-3 rounded-lg bg-white px-3 py-2 text-sm text-slate-700">
-                    <span className="text-slate-400">방문목적 · </span>
+                  <p className="mt-3 rounded-lg bg-surface-muted px-3 py-2 text-sm text-ink-2">
+                    <span className="text-ink-muted">방문목적 · </span>
                     {e.memo}
                   </p>
                 )}
 
                 {prepItems.length > 0 && (
-                  <p className="mt-3 rounded-lg bg-white px-3 py-2 text-sm text-slate-700">
-                    <span className="text-slate-400">준비물 · </span>
+                  <p className="mt-3 rounded-lg bg-surface-muted px-3 py-2 text-sm text-ink-2">
+                    <span className="text-ink-muted">준비물 · </span>
                     {prepItems.join(", ")}
                   </p>
                 )}
 
-                <div className="mt-3 grid grid-cols-1 gap-3 text-xs text-slate-600 sm:grid-cols-2">
+                <div className="mt-3 grid grid-cols-1 gap-3 text-xs text-ink-2 sm:grid-cols-2">
                   <div>
-                    <span className="text-slate-400">가입상품 · </span>
+                    <span className="text-ink-muted">가입상품 · </span>
                     {customer && customer.contracts.length > 0
                       ? customer.contracts.map((c) => c.productName).join(", ")
                       : "없음"}
                   </div>
                   <div>
-                    <span className="text-slate-400">최근 상담 · </span>
+                    <span className="text-ink-muted">최근 상담 · </span>
                     {latestConsultation
                       ? `${formatDate(latestConsultation.createdAt)} ${latestConsultation.content}`
                       : "이력 없음"}
@@ -295,17 +281,61 @@ export default async function DashboardPage() {
                 </div>
 
                 {customer?.memo && (
-                  <p className="mt-2 text-xs text-slate-400">💬 {customer.memo}</p>
+                  <p className="mt-2 text-xs text-ink-muted">💬 {customer.memo}</p>
                 )}
               </div>
             );
           })}
         </div>
       ) : (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-5 py-4 flex items-center gap-2">
-          <span className="text-slate-400">🚗</span>
-          <p className="text-sm text-slate-500">오늘 예정된 방문이 없습니다</p>
-        </div>
+        <>
+          {/* 모바일: 빈 상태를 다음 행동으로 이어주는 화면 */}
+          <div className="lg:hidden">
+            {uniqueCallTargets.length > 0 ? (
+              <div className="rounded-xl border border-border bg-surface p-4">
+                <p className="text-sm font-bold text-ink mb-3">
+                  오늘 방문은 없지만, 콜 대상 {uniqueCallTargets.length}명이 있어요
+                </p>
+                <div className="space-y-0.5">
+                  {uniqueCallTargets.slice(0, 3).map((c) => (
+                    <div key={c.id} className="flex items-center justify-between border-t border-border py-2 text-sm first:border-t-0">
+                      <span className="font-medium text-ink">{c.customer.name}</span>
+                      <span className="text-xs text-ink-muted">{formatPhone(c.customer.phone)}</span>
+                    </div>
+                  ))}
+                </div>
+                <Link href="/calls" className="mt-2 inline-block text-xs font-bold text-primary">
+                  전체 콜 대상 보기 →
+                </Link>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-border bg-surface p-5 text-center">
+                <p className="text-base mb-1">🌤️</p>
+                <p className="text-sm font-bold text-ink mb-1">오늘은 방문이 없어요</p>
+                <p className="text-xs text-ink-2 leading-relaxed mb-3">
+                  방문은 곧 다시 채워질 거예요. 지금 할 수 있는 일부터 해볼까요?
+                </p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <Link href="/calls" className="rounded-lg bg-primary px-3.5 py-2 text-xs font-bold text-white">
+                    콜 상담 바로가기
+                  </Link>
+                  <Link
+                    href="/calendar/new?title=보장분석"
+                    className="rounded-lg border border-primary px-3.5 py-2 text-xs font-bold text-primary"
+                  >
+                    보장분석/설계해보기
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 데스크탑: 기존 문구 그대로 유지 */}
+          <div className="hidden lg:flex rounded-xl border border-border bg-surface-muted px-5 py-4 items-center gap-2">
+            <span className="text-ink-muted">🚗</span>
+            <p className="text-sm text-ink-muted">오늘 예정된 방문이 없습니다</p>
+          </div>
+        </>
       ),
 
     quickActions: (
@@ -318,20 +348,20 @@ export default async function DashboardPage() {
     ),
 
     todos: (
-      <div className="rounded-xl border border-slate-200 bg-white p-5">
-        <h2 className="text-sm font-semibold text-slate-900 mb-3">오늘 할일</h2>
+      <div className="rounded-xl border border-border bg-surface p-5">
+        <h2 className="text-sm font-semibold text-ink mb-3">오늘 할일</h2>
         <form action={createTodo} className="flex gap-2 mb-3">
           <input
             type="text"
             name="content"
             required
             placeholder="할일을 입력하세요"
-            className="flex-1 rounded-lg border border-slate-300 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 rounded-lg border border-border px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
           <select
             name="priority"
             defaultValue="MEDIUM"
-            className="rounded-lg border border-slate-300 px-2.5 py-2 text-sm"
+            className="rounded-lg border border-border px-2.5 py-2 text-sm"
           >
             <option value="HIGH">중요도: 높음</option>
             <option value="MEDIUM">중요도: 보통</option>
@@ -339,7 +369,7 @@ export default async function DashboardPage() {
           </select>
           <button
             type="submit"
-            className="rounded-lg bg-slate-800 px-3.5 py-2 text-sm font-medium text-white hover:bg-slate-700 whitespace-nowrap"
+            className="rounded-lg bg-ink px-3.5 py-2 text-sm font-medium text-white hover:opacity-90 whitespace-nowrap"
           >
             추가
           </button>
@@ -349,7 +379,7 @@ export default async function DashboardPage() {
             <div
               key={t.id}
               className={`flex items-center gap-2.5 rounded-lg px-3.5 py-2 text-sm ${
-                t.done ? "bg-slate-50" : "border border-slate-100"
+                t.done ? "bg-surface-muted" : "border border-border"
               }`}
             >
               <form action={toggleTodo.bind(null, t.id)}>
@@ -359,8 +389,8 @@ export default async function DashboardPage() {
                   aria-label={t.done ? "완료 취소" : "완료 처리"}
                   className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border text-xs ${
                     t.done
-                      ? "border-slate-300 bg-slate-300 text-white"
-                      : "border-slate-300 hover:border-blue-400"
+                      ? "border-success bg-success text-success-ink"
+                      : "border-border hover:border-primary"
                   }`}
                 >
                   {t.done && "✓"}
@@ -371,25 +401,91 @@ export default async function DashboardPage() {
               >
                 {TODO_PRIORITY_LABEL[t.priority]}
               </span>
-              <span className={`flex-1 ${t.done ? "text-slate-400 line-through" : "text-slate-700"}`}>
+              <span className={`flex-1 ${t.done ? "text-ink-muted line-through" : "text-ink-2"}`}>
                 {t.content}
               </span>
               <form action={deleteTodo.bind(null, t.id)}>
-                <button type="submit" aria-label="삭제" className="text-xs text-slate-300 hover:text-red-600">
+                <button type="submit" aria-label="삭제" className="text-xs text-ink-muted hover:text-danger">
                   ✕
                 </button>
               </form>
             </div>
           ))}
-          {todos.length === 0 && <p className="text-sm text-slate-400 py-1">등록된 할일이 없습니다</p>}
+          {todos.length === 0 && <p className="text-sm text-ink-muted py-1">등록된 할일이 없습니다</p>}
         </div>
       </div>
     ),
 
     upcomingVisits: upcomingVisits.length > 0 ? (
-      <div className="rounded-xl border border-slate-200 bg-white p-5">
-        <h2 className="text-sm font-semibold text-slate-900 mb-3">다가오는 방문예약</h2>
-        <div className="space-y-2">
+      <div className="rounded-xl border border-border bg-surface p-5">
+        <h2 className="text-sm font-semibold text-ink mb-3">다가오는 방문예약</h2>
+
+        {/* 모바일: 두 줄로 나눠 쌓는 레이아웃 (좁은 화면에서 글자 세로깨짐 방지) */}
+        <div className="lg:hidden space-y-2">
+          {upcomingVisits.map((e) => {
+            const customer = e.customer;
+            const seq = visitSeqMap.get(e.id);
+            const hasContract = !!customer && customer.contracts.some((c) => c.source === "AGENT_SALE");
+            const hasReferred = !!customer && customer.referrals.length > 0;
+            return (
+              <div key={e.id} className="rounded-lg border border-border bg-surface p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-bold text-primary">
+                    {e.startAt.toLocaleDateString("ko-KR", { month: "numeric", day: "numeric", weekday: "short" })}{" "}
+                    {formatTime(e.startAt)}
+                  </span>
+                  <div className="flex shrink-0 items-center gap-2 text-xs font-medium text-ink-muted">
+                    {customer && (
+                      <VisitPrepModal
+                        customerName={customer.name}
+                        seq={seq}
+                        phone={formatPhone(customer.phone)}
+                        address={customer.address ?? "-"}
+                        products={customer.contracts.map((c) => c.productName)}
+                        mobileConsentText={customer.mobileConsent ? "동의함" : "동의안함"}
+                        visitNote={e.prepNote}
+                        triggerLabel="준비물"
+                        triggerClassName="text-xs font-medium text-accent"
+                      />
+                    )}
+                    <Link href={`/calendar/${e.id}/edit`}>수정</Link>
+                  </div>
+                </div>
+                <Link
+                  href={e.customerId ? `/customers/${e.customerId}` : "/calendar"}
+                  className="mt-1.5 block text-sm font-semibold text-ink"
+                >
+                  {customer?.name ?? e.title}
+                  {seq && <span className="ml-1.5 text-xs font-medium text-ink-muted">방문{seq}차</span>}
+                </Link>
+                {(e.area || customer?.address) && (
+                  <p className="mt-1 text-xs text-ink-2">
+                    📍 {e.area ? `${e.area} · ` : ""}
+                    {customer?.address ?? ""}
+                  </p>
+                )}
+                {e.companion && <p className="mt-0.5 text-xs text-ink-muted">👥 {e.companion} 동반</p>}
+                {(hasContract || hasReferred) && (
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {hasContract && (
+                      <span className="rounded bg-success-soft px-1.5 py-0.5 text-[11px] font-medium text-success">
+                        체결고객
+                      </span>
+                    )}
+                    {hasReferred && (
+                      <span className="rounded bg-accent-soft px-1.5 py-0.5 text-[11px] font-medium text-accent">
+                        소개왕
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* 데스크탑: 기존 한 줄 레이아웃 그대로 유지 */}
+        <div className="hidden lg:block space-y-2">
           {upcomingVisits.map((e) => {
             const customer = e.customer;
             const seq = visitSeqMap.get(e.id);
@@ -398,39 +494,39 @@ export default async function DashboardPage() {
             return (
               <div
                 key={e.id}
-                className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3.5 py-2.5 text-sm hover:bg-slate-100"
+                className="flex items-center justify-between gap-3 rounded-lg bg-surface-muted px-3.5 py-2.5 text-sm hover:bg-border/40"
               >
                 <Link
                   href={e.customerId ? `/customers/${e.customerId}` : "/calendar"}
                   className="flex items-center gap-2 flex-wrap flex-1 min-w-0"
                 >
-                  <span className="font-medium text-blue-700 whitespace-nowrap">
+                  <span className="font-medium text-primary whitespace-nowrap">
                     {e.startAt.toLocaleDateString("ko-KR", { month: "numeric", day: "numeric", weekday: "short" })}{" "}
                     {formatTime(e.startAt)}
                   </span>
-                  <span className="font-medium text-slate-800">{customer?.name ?? e.title}</span>
+                  <span className="font-medium text-ink">{customer?.name ?? e.title}</span>
                   {seq && (
-                    <span className="rounded bg-sky-100 px-1.5 py-0.5 text-[11px] font-bold text-sky-700">
+                    <span className="rounded bg-info-soft px-1.5 py-0.5 text-[11px] font-bold text-info">
                       방문{seq}차
                     </span>
                   )}
                   {hasContract && (
-                    <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-medium text-emerald-700">
+                    <span className="rounded bg-success-soft px-1.5 py-0.5 text-[11px] font-medium text-success">
                       체결고객
                     </span>
                   )}
                   {hasReferred && (
-                    <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-800">
+                    <span className="rounded bg-accent-soft px-1.5 py-0.5 text-[11px] font-medium text-accent">
                       소개왕
                     </span>
                   )}
                   {e.companion && (
-                    <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-500">
+                    <span className="rounded bg-surface px-1.5 py-0.5 text-[11px] text-ink-muted">
                       👥 {e.companion} 동반
                     </span>
                   )}
                 </Link>
-                <span className="text-slate-400 text-xs whitespace-nowrap">
+                <span className="text-ink-muted text-xs whitespace-nowrap">
                   {e.area ? `${e.area} · ` : ""}
                   {customer?.address ?? ""}
                 </span>
@@ -445,12 +541,12 @@ export default async function DashboardPage() {
                       mobileConsentText={customer.mobileConsent ? "동의함" : "동의안함"}
                       visitNote={e.prepNote}
                       triggerLabel="준비물"
-                      triggerClassName="text-xs font-medium text-slate-500 hover:text-blue-600 hover:underline"
+                      triggerClassName="text-xs font-medium text-ink-muted hover:text-primary hover:underline"
                     />
                   )}
                   <Link
                     href={`/calendar/${e.id}/edit`}
-                    className="text-xs font-medium text-slate-500 hover:text-blue-600 hover:underline"
+                    className="text-xs font-medium text-ink-muted hover:text-primary hover:underline"
                   >
                     수정
                   </Link>
@@ -463,101 +559,74 @@ export default async function DashboardPage() {
     ) : null,
 
     miniCalendar: (
-      <div className="rounded-xl border border-slate-200 bg-white p-5">
+      <div className="rounded-xl border border-border bg-surface p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-slate-900">일정 (지난주 · 이번주 · 다음주)</h2>
-          <Link href="/calendar" className="text-xs font-medium text-blue-600 hover:underline">
+          <h2 className="text-sm font-semibold text-ink">일정 (지난주 · 이번주 · 다음주)</h2>
+          <Link href="/calendar" className="text-xs font-medium text-primary hover:underline">
             캘린더 전체보기 →
           </Link>
         </div>
-        <div className="flex gap-2 mb-3 text-[11px] text-slate-500">
-          <span className="flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-full bg-blue-500" /> 방문
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" /> 교육
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-full bg-pink-500" /> 생일
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-full bg-amber-500" /> 만기
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-full bg-slate-400" /> 정보미팅·오전교육 (탭해서 참석 체크)
-          </span>
-        </div>
-        <div className="overflow-x-auto">
-        <div className="grid grid-cols-7 gap-px rounded-lg border border-slate-200 bg-slate-200 overflow-hidden text-sm min-w-[560px]">
-          {["일", "월", "화", "수", "목", "금", "토"].map((d) => (
-            <div key={d} className="bg-slate-50 px-1 py-1.5 text-center text-xs font-medium text-slate-500">
+        {/* 모바일: 칸마다 실제 일정 텍스트 표시 */}
+        <div className="lg:hidden grid grid-cols-7 gap-1">
+          {WEEKDAYS.map((d) => (
+            <div key={`m-${d}`} className="pb-1 text-center text-[11px] font-medium text-ink-muted">
               {d}
             </div>
           ))}
-          {weekRows.map((week) => (
-            <Fragment key={week.label}>
-              {week.days.map((d) => {
-                const isToday = dateKey(d) === dateKey(now);
-                const isCurrentWeek = week.label === "이번주";
-                const dayItems = miniItemsByDay.get(dateKey(d)) ?? [];
-                // 정보미팅/오전교육은 항상 노출(전체 캘린더와 동일하게 매일 탭 가능해야 함). 나머지 일정만 상위 2개로 제한.
-                const routineItems = dayItems.filter((i) => i.type === "ROUTINE");
-                const otherItems = dayItems
-                  .filter((i) => i.type !== "ROUTINE")
-                  .sort((a, b) => TYPE_PRIORITY[a.type] - TYPE_PRIORITY[b.type]);
-                const visibleOtherItems = otherItems.slice(0, 2);
-                const extraCount = otherItems.length - visibleOtherItems.length;
-                const visibleItems = [...visibleOtherItems, ...routineItems];
-                const hasVisit = otherItems.some((i) => i.type === "VISIT");
-                return (
-                  <div
-                    key={dateKey(d)}
-                    className={`min-h-[64px] p-1 ${isCurrentWeek ? "bg-indigo-50" : "bg-white"} ${isToday ? "ring-2 ring-inset ring-blue-500" : ""} ${hasVisit ? "bg-blue-50/60" : ""}`}
-                  >
-                    <div className={`text-[11px] mb-0.5 ${isToday ? "font-bold text-blue-600" : "text-slate-400"}`}>
-                      {d.getMonth() + 1}/{d.getDate()}
-                    </div>
-                    <div className="flex flex-col gap-0.5">
-                      {visibleItems.map((item) => {
-                        if (item.type === "ROUTINE") {
-                          return (
-                            <form
-                              key={item.key}
-                              action={setRoutineAttendance.bind(null, item.routineDate!, item.routineType!, !item.attended)}
-                            >
-                              <button
-                                type="submit"
-                                className={`block w-full truncate rounded px-1 py-0.5 text-left text-[10px] ${
-                                  item.attended ? "bg-emerald-100 text-emerald-700 line-through" : TYPE_STYLE[item.type]
-                                }`}
-                              >
-                                {item.attended ? "✓ " : ""}
-                                {item.label}
-                              </button>
-                            </form>
-                          );
-                        }
-                        const chip = (
-                          <span className={`block truncate rounded px-1 py-0.5 text-[10px] ${TYPE_STYLE[item.type]}`}>
-                            {item.label}
-                          </span>
-                        );
-                        return item.href ? (
-                          <Link key={item.key} href={item.href}>
-                            {chip}
-                          </Link>
-                        ) : (
-                          <div key={item.key}>{chip}</div>
-                        );
-                      })}
-                      {extraCount > 0 && <span className="text-[10px] text-slate-400">+{extraCount}</span>}
-                    </div>
-                  </div>
-                );
-              })}
-            </Fragment>
-          ))}
+          {miniDays.map((d) => {
+            const key = dateKey(d);
+            return (
+              <CalendarDayCell
+                key={`m-${key}`}
+                dayNum={d.getDate()}
+                label={`${d.getMonth() + 1}월 ${d.getDate()}일 (${WEEKDAYS[d.getDay()]})`}
+                isToday={key === dateKey(now)}
+                inMonth
+                items={miniItemsByDay.get(key) ?? []}
+                dense
+              />
+            );
+          })}
         </div>
+        {/* 데스크탑: 기존 점 표시 그대로 유지 */}
+        <div className="hidden lg:grid grid-cols-7 gap-1">
+          {WEEKDAYS.map((d) => (
+            <div key={d} className="pb-1 text-center text-[11px] font-medium text-ink-muted">
+              {d}
+            </div>
+          ))}
+          {miniDays.map((d) => {
+            const key = dateKey(d);
+            return (
+              <CalendarDayCell
+                key={key}
+                dayNum={d.getDate()}
+                label={`${d.getMonth() + 1}월 ${d.getDate()}일 (${WEEKDAYS[d.getDay()]})`}
+                isToday={key === dateKey(now)}
+                inMonth
+                items={miniItemsByDay.get(key) ?? []}
+              />
+            );
+          })}
+        </div>
+        <div className="mt-3 flex flex-wrap gap-3 text-xs text-ink-muted">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-[7px] w-[7px] rounded-full bg-success" />
+            루틴 완료
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-[7px] w-[7px] rounded-full bg-info" />
+            방문/일정
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-[7px] w-[7px] rounded-full bg-accent" />
+            생일
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-[7px] w-[7px] rounded-full bg-danger" />
+            만기
+          </span>
+          <span>· 날짜를 탭하면 펼쳐집니다</span>
         </div>
       </div>
     ),
@@ -589,10 +658,10 @@ export default async function DashboardPage() {
             <Link
               key={c.id}
               href={`/customers/${c.customerId}`}
-              className="flex items-center justify-between rounded-lg bg-slate-50 px-3.5 py-2.5 text-sm hover:bg-slate-100"
+              className="flex items-center justify-between rounded-lg bg-surface-muted px-3.5 py-2.5 text-sm hover:bg-border/40"
             >
-              <span className="font-medium text-slate-800">{c.customer.name}</span>
-              <span className="text-slate-400 text-xs">{formatPhone(c.customer.phone)}</span>
+              <span className="font-medium text-ink">{c.customer.name}</span>
+              <span className="text-ink-muted text-xs">{formatPhone(c.customer.phone)}</span>
             </Link>
           ))}
           {uniqueCallTargets.length === 0 && <EmptyRow text="오늘 재접촉 예정인 고객이 없습니다" />}
@@ -600,12 +669,12 @@ export default async function DashboardPage() {
 
         <DashboardSection title="발송대기 문자" href="/messages" linkLabel="문자함 전체 보기">
           {pendingMessages.map((m) => (
-            <div key={m.id} className="rounded-lg bg-slate-50 px-3.5 py-2.5 text-sm">
-              <div className="flex items-center gap-2 text-xs text-slate-400 mb-0.5">
-                <span className="font-medium text-slate-700">{m.customer.name}</span>
-                <span className="rounded bg-blue-50 px-1.5 py-0.5 text-blue-700">{m.triggerType}</span>
+            <div key={m.id} className="rounded-lg bg-surface-muted px-3.5 py-2.5 text-sm">
+              <div className="flex items-center gap-2 text-xs text-ink-muted mb-0.5">
+                <span className="font-medium text-ink-2">{m.customer.name}</span>
+                <span className="rounded bg-info-soft px-1.5 py-0.5 text-info">{m.triggerType}</span>
               </div>
-              <p className="text-slate-600 truncate">{m.content}</p>
+              <p className="text-ink-2 truncate">{m.content}</p>
             </div>
           ))}
           {pendingMessages.length === 0 && <EmptyRow text="발송 대기중인 문자가 없습니다" />}
@@ -616,10 +685,10 @@ export default async function DashboardPage() {
             <Link
               key={c.id}
               href={`/customers/${c.id}`}
-              className="flex items-center justify-between rounded-lg bg-pink-50 px-3.5 py-2.5 text-sm hover:bg-pink-100"
+              className="flex items-center justify-between rounded-lg bg-accent-soft px-3.5 py-2.5 text-sm hover:opacity-90"
             >
-              <span className="font-medium text-slate-800">🎂 {c.name}</span>
-              <span className="text-slate-400 text-xs">{formatPhone(c.phone)}</span>
+              <span className="font-medium text-ink">🎂 {c.name}</span>
+              <span className="text-ink-muted text-xs">{formatPhone(c.phone)}</span>
             </Link>
           ))}
           {todayBirthdays.length === 0 && <EmptyRow text="오늘 생일인 고객이 없습니다" />}
@@ -628,24 +697,24 @@ export default async function DashboardPage() {
     ),
 
     bottomStats: (
-      <div className="rounded-xl border border-slate-200 bg-white p-5">
-        <h2 className="text-sm font-semibold text-slate-900 mb-4">통계</h2>
+      <div className="rounded-xl border border-border bg-surface p-5">
+        <h2 className="text-sm font-semibold text-ink mb-4">통계</h2>
         <div className="grid grid-cols-1 gap-6 text-sm sm:grid-cols-3">
           <div>
-            <p className="text-slate-400 mb-1.5">등급별 고객</p>
-            <p className="text-slate-700">
+            <p className="text-ink-muted mb-1.5">등급별 고객</p>
+            <p className="text-ink-2">
               A {gradeMap.A ?? 0}명 · B {gradeMap.B ?? 0}명 · C {gradeMap.C ?? 0}명
             </p>
           </div>
           <div>
-            <p className="text-slate-400 mb-1.5">보험종류별 유지계약</p>
-            <p className="text-slate-700">
+            <p className="text-ink-muted mb-1.5">보험종류별 유지계약</p>
+            <p className="text-ink-2">
               {contractsByCategory.map((c) => `${c.category} ${c._count}건`).join(" · ") || "-"}
             </p>
           </div>
           <div>
-            <p className="text-slate-400 mb-1.5">이번달 신규계약</p>
-            <p className="text-slate-700">{newContractsThisMonth}건</p>
+            <p className="text-ink-muted mb-1.5">이번달 신규계약</p>
+            <p className="text-ink-2">{newContractsThisMonth}건</p>
           </div>
         </div>
       </div>
@@ -656,10 +725,11 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900 mb-1">
+      <p className="text-base font-bold text-accent mb-2">{getEnergeticGreeting(user.name, now, user.birthDate)}</p>
+      <h1 className="text-2xl font-bold text-ink mb-1">
         {now.toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "long" })}
       </h1>
-      <p className="text-sm text-slate-500 mb-6">오늘 확인할 항목을 한눈에 보세요.</p>
+      <p className="text-sm text-ink-muted mb-6">오늘 확인할 항목을 한눈에 보세요.</p>
 
       {/* 사용자가 설정 페이지에서 순서/표시여부를 조정할 수 있는 섹션들 */}
       <div className="space-y-8">
@@ -675,7 +745,7 @@ function QuickAction({ href, icon, label }: { href: string; icon: string; label:
   return (
     <Link
       href={href}
-      className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+      className="flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-medium text-ink-2 hover:border-primary/40 hover:bg-primary/10 hover:text-primary transition-colors"
     >
       <span>{icon}</span>
       {label}
@@ -697,12 +767,12 @@ function StatCard({
   return (
     <Link
       href={href}
-      className="block rounded-xl border border-slate-200 bg-white p-4 hover:border-blue-300 hover:shadow-sm transition-colors"
+      className="block rounded-xl border border-border bg-surface p-4 hover:border-primary/40 hover:shadow-sm transition-colors"
     >
-      <p className="text-xs text-slate-400">{label}</p>
-      <p className="text-2xl font-bold text-slate-900 mt-1">
+      <p className="text-xs text-ink-muted">{label}</p>
+      <p className="text-2xl font-bold text-ink mt-1">
         {value}
-        {sub && <span className="ml-1 text-xs font-normal text-slate-400">{sub}</span>}
+        {sub && <span className="ml-1 text-xs font-normal text-ink-muted">{sub}</span>}
       </p>
     </Link>
   );
@@ -720,10 +790,10 @@ function DashboardSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5">
+    <div className="rounded-xl border border-border bg-surface p-5">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
-        <Link href={href} className="text-xs font-medium text-blue-600 hover:underline">
+        <h2 className="text-sm font-semibold text-ink">{title}</h2>
+        <Link href={href} className="text-xs font-medium text-primary hover:underline">
           {linkLabel} →
         </Link>
       </div>
@@ -733,5 +803,5 @@ function DashboardSection({
 }
 
 function EmptyRow({ text }: { text: string }) {
-  return <p className="text-sm text-slate-400 py-2">{text}</p>;
+  return <p className="text-sm text-ink-muted py-2">{text}</p>;
 }

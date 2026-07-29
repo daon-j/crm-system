@@ -18,6 +18,7 @@ model User {
   name         String?
   phone        String?
   extension    String?
+  birthDate    DateTime? // 설계사 본인 생일 (선택) - 홈 화면 인사 문구에 활용
   createdAt    DateTime @default(now())
 
   sessions           Session[]

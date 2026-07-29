@@ -25,7 +25,7 @@ export default function SendCompleteButton({
       type="button"
       onClick={handleClick}
       disabled={isPending}
-      className="rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+      className="rounded-lg bg-primary px-3.5 py-1.5 text-xs font-medium text-white hover:bg-primary-hover disabled:opacity-50"
     >
       {isPending ? "처리 중..." : "발송완료 처리"}
     </button>

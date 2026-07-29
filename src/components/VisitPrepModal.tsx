@@ -11,8 +11,8 @@ export default function VisitPrepModal({
   products,
   mobileConsentText,
   visitNote,
-  triggerLabel = "방문 준비하기 →",
-  triggerClassName = "rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-blue-700 whitespace-nowrap",
+  triggerLabel = "방문 준비물 →",
+  triggerClassName = "rounded-lg bg-info-soft px-3.5 py-1.5 text-xs font-bold text-primary hover:opacity-80 whitespace-nowrap",
 }: {
   customerName: string;
   seq?: number;
@@ -46,21 +46,21 @@ export default function VisitPrepModal({
       </button>
       <dialog
         ref={dialogRef}
-        className="m-auto w-full max-w-sm rounded-xl border border-slate-200 p-0 max-h-[85vh] backdrop:bg-black/30"
+        className="m-auto w-full max-w-sm rounded-xl border border-border bg-surface p-0 max-h-[85vh] backdrop:bg-black/30"
         onClick={(e) => {
           if (e.target === dialogRef.current) dialogRef.current?.close();
         }}
       >
         <div className="max-h-[85vh] overflow-y-auto p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-bold text-slate-900">
+            <h3 className="text-base font-bold text-ink">
               {customerName} 고객{seq ? ` · 방문${seq}차` : ""}
             </h3>
             <button
               type="button"
               onClick={() => dialogRef.current?.close()}
               aria-label="닫기"
-              className="text-slate-400 hover:text-slate-600"
+              className="text-ink-muted hover:text-ink"
             >
               ✕
             </button>
@@ -68,11 +68,11 @@ export default function VisitPrepModal({
 
           {prepItems.length > 0 && (
             <div className="mb-4">
-              <p className="text-xs font-medium text-slate-500 mb-1.5">준비물</p>
+              <p className="text-xs font-medium text-ink-muted mb-1.5">준비물</p>
               <ul className="space-y-1.5">
                 {prepItems.map((item, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm text-slate-700">
-                    <input type="checkbox" className="h-4 w-4 rounded border-slate-300" />
+                  <li key={i} className="flex items-center gap-2 text-sm text-ink-2">
+                    <input type="checkbox" className="h-4 w-4 rounded border-border" />
                     {item}
                   </li>
                 ))}
@@ -80,17 +80,17 @@ export default function VisitPrepModal({
             </div>
           )}
 
-          <div className="space-y-2 rounded-lg bg-slate-50 p-3 text-sm">
+          <div className="space-y-2 rounded-lg bg-surface-muted p-3 text-sm">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-slate-600">📞 {phone}</span>
+              <span className="text-ink-2">📞 {phone}</span>
               <CopyButton text={phone} label="복사" />
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-slate-600 min-w-0 truncate">📍 {address}</span>
+              <span className="text-ink-2 min-w-0 truncate">📍 {address}</span>
               <CopyButton text={address} label="복사" />
             </div>
-            <p className="text-slate-600">💼 {products.length > 0 ? products.join(", ") : "가입상품 없음"}</p>
-            <p className="text-slate-600">📱 모바일동의: {mobileConsentText}</p>
+            <p className="text-ink-2">💼 {products.length > 0 ? products.join(", ") : "가입상품 없음"}</p>
+            <p className="text-ink-2">📱 모바일동의: {mobileConsentText}</p>
           </div>
 
           <div className="mt-3">

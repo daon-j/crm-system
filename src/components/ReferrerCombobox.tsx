@@ -111,8 +111,8 @@ export default function ReferrerCombobox({
 
   function badgeClass(c: ReferrerOption): string {
     return c.batchName === currentMonthBatchName
-      ? "bg-amber-100 text-amber-700"
-      : "bg-violet-50 text-violet-600";
+      ? "bg-accent-soft text-accent"
+      : "bg-info-soft text-info";
   }
 
   return (
@@ -133,7 +133,7 @@ export default function ReferrerCombobox({
           onFocus={() => setOpen(true)}
           placeholder={placeholder}
           autoComplete="off"
-          className="w-full rounded-lg border border-slate-300 px-3.5 py-2 pr-24 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded-lg border border-border px-3.5 py-2 pr-24 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
         <div className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center gap-2">
           <button
@@ -142,12 +142,12 @@ export default function ReferrerCombobox({
               setBrowseAll(true);
               setOpen(true);
             }}
-            className="text-xs font-medium text-blue-600 hover:underline"
+            className="text-xs font-medium text-primary hover:underline"
           >
             전체목록
           </button>
           {selectedId && (
-            <button type="button" onClick={clear} className="text-xs text-slate-400 hover:text-red-600">
+            <button type="button" onClick={clear} className="text-xs text-ink-muted hover:text-danger">
               지우기
             </button>
           )}
@@ -156,7 +156,7 @@ export default function ReferrerCombobox({
 
       {!selectedId && recentContacts.length > 0 && (
         <div className="mt-1.5 flex flex-wrap gap-1.5">
-          <span className="self-center text-[11px] text-slate-400">최근 접촉</span>
+          <span className="self-center text-[11px] text-ink-muted">최근 접촉</span>
           {recentContacts.map((rc) => {
             const c = customers.find((cust) => cust.id === rc.id);
             if (!c) return null;
@@ -165,7 +165,7 @@ export default function ReferrerCombobox({
                 key={rc.id}
                 type="button"
                 onClick={() => select(c)}
-                className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-600 hover:bg-blue-50 hover:text-blue-700"
+                className="rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[11px] text-ink-2 hover:bg-primary/10 hover:text-primary"
               >
                 {rc.label}
               </button>
@@ -179,14 +179,14 @@ export default function ReferrerCombobox({
           {showMonthQuickPicks ? (
             <>
               <div className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-400">{currentMonthLabel} (아직 미접촉 우선)</span>
+                <span className="text-[11px] text-ink-muted">{currentMonthLabel} (아직 미접촉 우선)</span>
                 <button
                   type="button"
                   onClick={() => {
                     setMonthFilter(true);
                     setOpen(true);
                   }}
-                  className="text-[11px] font-medium text-blue-600 hover:underline"
+                  className="text-[11px] font-medium text-primary hover:underline"
                 >
                   전체 {currentMonthLabel} 보기 →
                 </button>
@@ -198,7 +198,7 @@ export default function ReferrerCombobox({
                       key={c.id}
                       type="button"
                       onClick={() => select(c)}
-                      className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] text-amber-700 hover:bg-amber-100"
+                      className="rounded-full bg-accent-soft px-2.5 py-1 text-[11px] text-accent hover:opacity-90"
                     >
                       {c.name}
                     </button>
@@ -213,7 +213,7 @@ export default function ReferrerCombobox({
                 setMonthFilter(true);
                 setOpen(true);
               }}
-              className="text-[11px] font-medium text-blue-600 hover:underline"
+              className="text-[11px] font-medium text-primary hover:underline"
             >
               전체 {currentMonthLabel} 보기 →
             </button>
@@ -223,7 +223,7 @@ export default function ReferrerCombobox({
 
       {!selectedId && showChosungIndex && (
         <div className="mt-1.5 flex flex-wrap items-center gap-1">
-          <span className="mr-0.5 text-[11px] text-slate-400">초성</span>
+          <span className="mr-0.5 text-[11px] text-ink-muted">초성</span>
           {CHOSUNG_INDEX.map((ch) => (
             <button
               key={ch}
@@ -236,8 +236,8 @@ export default function ReferrerCombobox({
               }}
               className={`rounded px-1.5 py-0.5 text-[11px] font-medium ${
                 indexFilter === ch
-                  ? "bg-blue-100 text-blue-700"
-                  : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                  ? "bg-primary/10 text-primary"
+                  : "bg-surface-muted text-ink-muted hover:bg-surface-muted"
               }`}
             >
               {ch}
@@ -247,9 +247,9 @@ export default function ReferrerCombobox({
       )}
 
       {showDropdown && results.length > 0 && (
-        <ul className="absolute z-10 mt-1 w-full max-h-64 overflow-auto rounded-lg border border-slate-200 bg-white text-sm shadow-lg">
+        <ul className="absolute z-10 mt-1 w-full max-h-64 overflow-auto rounded-lg border border-border bg-surface text-sm shadow-lg">
           {(browseAll || indexFilter || monthFilter) && (
-            <li className="sticky top-0 border-b border-slate-100 bg-slate-50 px-3.5 py-1.5 text-[11px] text-slate-400">
+            <li className="sticky top-0 border-b border-border bg-surface-muted px-3.5 py-1.5 text-[11px] text-ink-muted">
               {monthFilter
                 ? `${currentMonthLabel} · ${results.length}명`
                 : indexFilter
@@ -262,10 +262,10 @@ export default function ReferrerCombobox({
               <button
                 type="button"
                 onClick={() => select(c)}
-                className="w-full px-3.5 py-2 text-left hover:bg-blue-50"
+                className="w-full px-3.5 py-2 text-left hover:bg-primary/10"
               >
                 {c.name}
-                {c.phone && <span className="ml-1 text-slate-400">({formatPhone(c.phone)})</span>}
+                {c.phone && <span className="ml-1 text-ink-muted">({formatPhone(c.phone)})</span>}
                 {c.batchName && (
                   <span className={`ml-1.5 rounded px-1 py-0.5 text-[10px] ${badgeClass(c)}`}>
                     {c.batchName}
@@ -277,7 +277,7 @@ export default function ReferrerCombobox({
         </ul>
       )}
       {showDropdown && results.length === 0 && (
-        <div className="absolute z-10 mt-1 w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-400 shadow-lg">
+        <div className="absolute z-10 mt-1 w-full rounded-lg border border-border bg-surface px-3.5 py-2 text-sm text-ink-muted shadow-lg">
           검색 결과가 없습니다
         </div>
       )}

@@ -37,8 +37,8 @@ export default function CategoryChips({
             onClick={() => setSelected(c)}
             className={`rounded-lg border px-3 py-1 text-sm ${
               selected === c
-                ? "border-blue-400 bg-blue-50 text-blue-700"
-                : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                ? "border-primary/40 bg-primary/10 text-primary"
+                : "border-border bg-surface-muted text-ink-2 hover:bg-surface-muted"
             }`}
           >
             {c}
@@ -48,7 +48,7 @@ export default function CategoryChips({
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="rounded-lg border border-dashed border-slate-300 px-3 py-1 text-sm text-slate-400 hover:border-slate-400"
+            className="rounded-lg border border-dashed border-border px-3 py-1 text-sm text-ink-muted hover:border-ink-muted"
           >
             + 새 구분
           </button>
@@ -67,12 +67,12 @@ export default function CategoryChips({
               }
             }}
             placeholder="예) 본사교육"
-            className="flex-1 rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm"
+            className="flex-1 rounded-lg border border-border px-2.5 py-1.5 text-sm"
           />
           <button
             type="button"
             onClick={addChip}
-            className="rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700"
+            className="rounded-lg bg-ink px-3 py-1.5 text-xs font-medium text-white hover:opacity-90"
           >
             추가
           </button>

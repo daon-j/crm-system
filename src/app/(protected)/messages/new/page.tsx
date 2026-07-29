@@ -14,7 +14,7 @@ export default async function NewMessagePage({
   const user = await requireUser();
   const { templateId } = await searchParams;
 
-  const [customersRaw, recentContacts, currentMonthBatch, templates, contracts] = await Promise.all([
+  const [customersRaw, recentContacts, currentMonthBatch, templates, contracts, upcomingVisits] = await Promise.all([
     prisma.customer.findMany({
       where: { userId: user.id },
       orderBy: { name: "asc" },
@@ -29,7 +29,18 @@ export default async function NewMessagePage({
     prisma.contract.findMany({
       where: { customer: { userId: user.id } },
       orderBy: { createdAt: "desc" },
-      select: { id: true, customerId: true, insurer: true, productName: true },
+      select: { id: true, customerId: true, insurer: true, productName: true, expiryDate: true },
+    }),
+    prisma.calendarEvent.findMany({
+      where: {
+        userId: user.id,
+        type: "VISIT",
+        status: "SCHEDULED",
+        customerId: { not: null },
+        startAt: { gte: new Date() },
+      },
+      orderBy: { startAt: "asc" },
+      select: { customerId: true, startAt: true, area: true },
     }),
   ]);
   const customers = customersRaw.map((c) => ({
@@ -39,13 +50,23 @@ export default async function NewMessagePage({
     batchName: c.batch?.name ?? null,
   }));
 
-  const contractsByCustomer: Record<string, { id: string; insurer: string; productName: string }[]> = {};
+  const contractsByCustomer: Record<
+    string,
+    { id: string; insurer: string; productName: string; expiryDate: Date | null }[]
+  > = {};
   for (const c of contracts) {
     (contractsByCustomer[c.customerId] ??= []).push({
       id: c.id,
       insurer: c.insurer,
       productName: c.productName,
+      expiryDate: c.expiryDate,
     });
+  }
+
+  const nextVisitByCustomer: Record<string, { startAt: string; area: string | null }> = {};
+  for (const v of upcomingVisits) {
+    if (!v.customerId || nextVisitByCustomer[v.customerId]) continue;
+    nextVisitByCustomer[v.customerId] = { startAt: v.startAt.toISOString(), area: v.area };
   }
 
   return (
@@ -57,6 +78,7 @@ export default async function NewMessagePage({
       currentMonthLabel={currentMonthBatch.label}
       templates={templates}
       contractsByCustomer={contractsByCustomer}
+      nextVisitByCustomer={nextVisitByCustomer}
       initialTemplateId={templateId}
       agentVars={agentVars(user)}
     />

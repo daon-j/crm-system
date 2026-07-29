@@ -25,7 +25,7 @@ export default function Toaster() {
       {toasts.map((t) => (
         <div
           key={t.id}
-          className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm text-white shadow-lg"
+          className="rounded-lg bg-ink px-4 py-2.5 text-sm text-white shadow-lg"
         >
           {t.message}
         </div>

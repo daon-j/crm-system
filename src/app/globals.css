@@ -1,19 +1,162 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f8fa;
-  --foreground: #1a1d23;
+  --background: #f5f2ea;
+  --foreground: #1c2b3a;
+
+  /* 표면/배경 */
+  --color-bg: #f5f2ea;
+  --color-surface: #ffffff;
+  --color-surface-muted: #efe7d6;
+  --color-border: #e5dcc7;
+
+  /* 텍스트 */
+  --color-ink: #1c2b3a;
+  --color-ink-2: #4b5768;
+  --color-ink-muted: #8c8574;
+
+  /* 주 색상 (네이비) */
+  --color-primary: #1d3a5f;
+  --color-primary-hover: #16304e;
+  --color-primary-ink: #f7f5ef;
+
+  /* 포인트 (브라스 골드) */
+  --color-accent: #a8722f;
+  --color-accent-hover: #8f5f26;
+  --color-accent-soft: #f1e3c9;
+  --color-accent-ink: #f7f5ef;
+
+  /* 의미 색상: 위험/성공/정보는 절제된 톤으로만, 배지 남용 금지 */
+  --color-danger: #b5432f;
+  --color-danger-soft: #f7e0d8;
+  --color-danger-ink: #f7f5ef;
+  --color-success: #4b7a5b;
+  --color-success-soft: #e3eee6;
+  --color-success-ink: #f7f5ef;
+  --color-info: #3b6ea5;
+  --color-info-soft: #e2ecf5;
+
+  color-scheme: light;
+}
+
+/* 시스템이 다크로 설정돼 있으면 자동 적용 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --background: #14181d;
+    --foreground: #eef1f5;
+    --color-bg: #14181d;
+    --color-surface: #1b2027;
+    --color-surface-muted: #232a33;
+    --color-border: #2b323c;
+    --color-ink: #eef1f5;
+    --color-ink-2: #c3c9d1;
+    --color-ink-muted: #8a92a0;
+    --color-primary: #4d7fb0;
+    --color-primary-hover: #5f8fbe;
+    --color-primary-ink: #eef1f5;
+    --color-accent: #d3a869;
+    --color-accent-hover: #c99850;
+    --color-accent-soft: #3a2f1e;
+    --color-accent-ink: #1c1610;
+    --color-danger: #e08573;
+    --color-danger-soft: #3a2420;
+    --color-danger-ink: #1c1310;
+    --color-success: #8ec19f;
+    --color-success-soft: #1f2b25;
+    --color-success-ink: #10190f;
+    --color-info: #8fb6de;
+    --color-info-soft: #1f2c39;
+    color-scheme: dark;
+  }
+}
+
+/* 설정에서 수동으로 고른 테마 - 시스템 설정보다 우선 */
+:root[data-theme="dark"] {
+  --background: #14181d;
+  --foreground: #eef1f5;
+  --color-bg: #14181d;
+  --color-surface: #1b2027;
+  --color-surface-muted: #232a33;
+  --color-border: #2b323c;
+  --color-ink: #eef1f5;
+  --color-ink-2: #c3c9d1;
+  --color-ink-muted: #8a92a0;
+  --color-primary: #4d7fb0;
+  --color-primary-hover: #5f8fbe;
+  --color-primary-ink: #eef1f5;
+  --color-accent: #d3a869;
+  --color-accent-hover: #c99850;
+  --color-accent-soft: #3a2f1e;
+  --color-accent-ink: #1c1610;
+  --color-danger: #e08573;
+  --color-danger-soft: #3a2420;
+  --color-danger-ink: #1c1310;
+  --color-success: #8ec19f;
+  --color-success-soft: #1f2b25;
+  --color-success-ink: #10190f;
+  --color-info: #8fb6de;
+  --color-info-soft: #1f2c39;
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --background: #f5f2ea;
+  --foreground: #1c2b3a;
+  --color-bg: #f5f2ea;
+  --color-surface: #ffffff;
+  --color-surface-muted: #efe7d6;
+  --color-border: #e5dcc7;
+  --color-ink: #1c2b3a;
+  --color-ink-2: #4b5768;
+  --color-ink-muted: #8c8574;
+  --color-primary: #1d3a5f;
+  --color-primary-hover: #16304e;
+  --color-primary-ink: #f7f5ef;
+  --color-accent: #a8722f;
+  --color-accent-hover: #8f5f26;
+  --color-accent-soft: #f1e3c9;
+  --color-accent-ink: #f7f5ef;
+  --color-danger: #b5432f;
+  --color-danger-soft: #f7e0d8;
+  --color-danger-ink: #f7f5ef;
+  --color-success: #4b7a5b;
+  --color-success-soft: #e3eee6;
+  --color-success-ink: #f7f5ef;
+  --color-info: #3b6ea5;
+  --color-info-soft: #e2ecf5;
+  color-scheme: light;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-bg: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-surface-muted: var(--color-surface-muted);
+  --color-border: var(--color-border);
+  --color-ink: var(--color-ink);
+  --color-ink-2: var(--color-ink-2);
+  --color-ink-muted: var(--color-ink-muted);
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-primary-ink: var(--color-primary-ink);
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-soft: var(--color-accent-soft);
+  --color-accent-ink: var(--color-accent-ink);
+  --color-danger: var(--color-danger);
+  --color-danger-soft: var(--color-danger-soft);
+  --color-danger-ink: var(--color-danger-ink);
+  --color-success: var(--color-success);
+  --color-success-soft: var(--color-success-soft);
+  --color-success-ink: var(--color-success-ink);
+  --color-info: var(--color-info);
+  --color-info-soft: var(--color-info-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-bg);
+  color: var(--color-ink);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }

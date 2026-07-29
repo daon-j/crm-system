@@ -65,7 +65,7 @@ export async function updateEvent(eventId: string, formData: FormData) {
     where: { id: eventId },
     data: {
       title,
-      type: type === "VISIT" || type === "TRAINING" ? type : "CUSTOM",
+      type: type === "VISIT" || type === "TRAINING" || type === "ROUTINE" ? type : "CUSTOM",
       startAt: newStartAt,
       memo: str(formData, "memo") ?? null,
       companion: str(formData, "companion") ?? null,

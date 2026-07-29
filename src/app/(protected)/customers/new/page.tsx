@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import CustomerForm from "@/components/CustomerForm";
 import { createCustomer } from "@/lib/actions/customers";
@@ -31,7 +32,10 @@ export default async function NewCustomerPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900 mb-6">신규 고객 등록</h1>
+      <Link href="/customers" className="text-sm text-ink-muted hover:underline">
+        ← 고객목록
+      </Link>
+      <h1 className="text-2xl font-bold text-ink mb-6 mt-1">신규 고객 등록</h1>
       <CustomerForm
         action={createCustomer}
         submitLabel="등록하기"

@@ -26,8 +26,12 @@ export async function updateMessageTemplate(templateId: string, formData: FormDa
   const user = await requireUser();
   const body = str(formData, "body");
   if (!body) return;
-  await prisma.messageTemplate.update({ where: { id: templateId, userId: user.id }, data: { body } });
+  await prisma.messageTemplate.updateMany({
+    where: { id: templateId, OR: [{ userId: user.id }, { userId: null }] },
+    data: { body },
+  });
   revalidatePath("/settings");
+  revalidatePath("/messages");
 }
 
 export async function deleteMessageTemplate(templateId: string) {

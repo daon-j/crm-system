@@ -81,15 +81,18 @@ function str(formData: FormData, key: string): string | null {
 
 export async function updateProfile(formData: FormData) {
   const user = await requireUser();
+  const birthDateStr = str(formData, "birthDate");
   await prisma.user.update({
     where: { id: user.id },
     data: {
       name: str(formData, "name"),
       phone: str(formData, "phone"),
       extension: str(formData, "extension"),
+      birthDate: birthDateStr ? new Date(birthDateStr) : null,
     },
   });
   revalidatePath("/settings");
+  revalidatePath("/");
 }
 
 export async function changePassword(

@@ -28,7 +28,7 @@ export default function ContractStatusSelect({
           updateContractStatus(contractId, next);
         });
       }}
-      className="rounded border border-slate-200 px-1.5 py-1 text-xs text-slate-600 disabled:opacity-50"
+      className="rounded border border-border px-1.5 py-1 text-xs text-ink-2 disabled:opacity-50"
     >
       {Object.entries(STATUS_LABEL).map(([value, label]) => (
         <option key={value} value={value}>

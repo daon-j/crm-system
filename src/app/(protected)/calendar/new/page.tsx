@@ -5,8 +5,13 @@ import { getCurrentMonthBatch } from "@/lib/currentMonthBatch";
 import NewEventForm from "@/components/NewEventForm";
 import { requireUser } from "@/lib/auth";
 
-export default async function NewCalendarEventPage() {
+export default async function NewCalendarEventPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ title?: string }>;
+}) {
   const user = await requireUser();
+  const { title } = await searchParams;
 
   const [customersRaw, recentContacts, currentMonthBatch] = await Promise.all([
     prisma.customer.findMany({
@@ -31,6 +36,8 @@ export default async function NewCalendarEventPage() {
       recentContacts={recentContacts}
       currentMonthBatchName={currentMonthBatch.batchName}
       currentMonthLabel={currentMonthBatch.label}
+      defaultType={title ? "CUSTOM" : "VISIT"}
+      defaultTitle={title}
     />
   );
 }

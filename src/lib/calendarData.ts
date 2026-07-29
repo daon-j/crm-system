@@ -1,33 +1,16 @@
 import { prisma } from "@/lib/prisma";
 import { formatTime } from "@/lib/format";
+import { dateKey, type DayItem } from "@/lib/calendarTypes";
 
-export type DayItem = {
-  key: string;
-  label: string;
-  type: "ROUTINE" | "VISIT" | "TRAINING" | "CUSTOM" | "BIRTHDAY" | "EXPIRY";
-  href?: string;
-  eventId?: string;
-  // ROUTINE(정보미팅/오전교육) 전용 - 참석 여부 및 토글에 필요한 정보
-  attended?: boolean;
-  routineDate?: string;
-  routineType?: "MEETING" | "TRAINING";
-};
+export type { DayItem };
+export { dateKey, TYPE_STYLE, TYPE_DOT } from "@/lib/calendarTypes";
 
 const MEETING_CATEGORIES = ["정보미팅", "MORNING_MEETING"];
 const TRAINING_CATEGORIES = ["오전교육", "MORNING_TRAINING"];
-
-export const TYPE_STYLE: Record<DayItem["type"], string> = {
-  ROUTINE: "bg-slate-100 text-slate-500",
-  VISIT: "bg-blue-100 text-blue-700",
-  TRAINING: "bg-emerald-100 text-emerald-700",
-  CUSTOM: "bg-violet-100 text-violet-700",
-  BIRTHDAY: "bg-pink-100 text-pink-700",
-  EXPIRY: "bg-amber-100 text-amber-800",
+const ROUTINE_TITLE: Record<"MEETING" | "TRAINING", string> = {
+  MEETING: "정보미팅",
+  TRAINING: "오전교육",
 };
-
-export function dateKey(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
 
 function eachDay(rangeStart: Date, dayCount: number): Date[] {
   return Array.from({ length: dayCount }, (_, i) => {
@@ -35,6 +18,39 @@ function eachDay(rangeStart: Date, dayCount: number): Date[] {
     d.setDate(d.getDate() + i);
     return d;
   });
+}
+
+// 평일마다 정보미팅(09:40)/오전교육(10:20)을 실제 CalendarEvent로 채워 넣는다.
+// 이렇게 해야 방문·기타 일정처럼 개별 날짜 단위로 시간 변경/취소가 가능해진다.
+// 이미 만들어진(취소된 것 포함) 날짜는 건드리지 않고 빠진 날짜만 채운다.
+async function materializeRoutineEvents(rangeStart: Date, rangeEnd: Date, userId: string) {
+  const existing = await prisma.calendarEvent.findMany({
+    where: { userId, type: "ROUTINE", startAt: { gte: rangeStart, lte: rangeEnd } },
+    select: { startAt: true, title: true },
+  });
+  const existingKeys = new Set(existing.map((e) => `${dateKey(e.startAt)}-${e.title}`));
+
+  const dayCount = Math.round((rangeEnd.getTime() - rangeStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  const days = eachDay(rangeStart, dayCount);
+
+  const toCreate: { userId: string; title: string; type: string; startAt: Date }[] = [];
+  for (const d of days) {
+    const day = d.getDay();
+    if (day < 1 || day > 5) continue;
+    const meetingAt = new Date(d);
+    meetingAt.setHours(9, 40, 0, 0);
+    const trainingAt = new Date(d);
+    trainingAt.setHours(10, 20, 0, 0);
+    if (!existingKeys.has(`${dateKey(d)}-${ROUTINE_TITLE.MEETING}`)) {
+      toCreate.push({ userId, title: ROUTINE_TITLE.MEETING, type: "ROUTINE", startAt: meetingAt });
+    }
+    if (!existingKeys.has(`${dateKey(d)}-${ROUTINE_TITLE.TRAINING}`)) {
+      toCreate.push({ userId, title: ROUTINE_TITLE.TRAINING, type: "ROUTINE", startAt: trainingAt });
+    }
+  }
+  if (toCreate.length > 0) {
+    await prisma.calendarEvent.createMany({ data: toCreate });
+  }
 }
 
 // 고객별 VISIT 이벤트를 시간순으로 정렬해 몇 번째 방문인지(1차/2차/...) 매핑을 만든다.
@@ -59,12 +75,14 @@ export async function getVisitSequenceMap(customerIds: string[], userId: string)
   return seqById;
 }
 
-// rangeStart~rangeEnd(포함) 사이의 방문/교육/기타 일정 + 루틴 + 생일 + 만기를 날짜별로 묶어서 반환
+// rangeStart~rangeEnd(포함) 사이의 방문/교육/루틴/기타 일정 + 생일 + 만기를 날짜별로 묶어서 반환
 export async function getCalendarItems(
   rangeStart: Date,
   rangeEnd: Date,
   userId: string,
 ): Promise<Map<string, DayItem[]>> {
+  await materializeRoutineEvents(rangeStart, rangeEnd, userId);
+
   const dayCount = Math.round((rangeEnd.getTime() - rangeStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
   const days = eachDay(rangeStart, dayCount);
 
@@ -114,29 +132,20 @@ export async function getCalendarItems(
     itemsByDay.get(k)!.push(item);
   };
 
-  for (const d of days) {
-    const day = d.getDay();
-    if (day >= 1 && day <= 5) {
-      pushItem(d, {
-        key: `routine-meeting-${dateKey(d)}`,
-        label: "09:40 정보미팅",
-        type: "ROUTINE",
-        attended: routineAttended(d, "MEETING"),
-        routineDate: dateKey(d),
-        routineType: "MEETING",
-      });
-      pushItem(d, {
-        key: `routine-training-${dateKey(d)}`,
-        label: "10:20 오전교육",
-        type: "ROUTINE",
-        attended: routineAttended(d, "TRAINING"),
-        routineDate: dateKey(d),
-        routineType: "TRAINING",
-      });
-    }
-  }
-
   for (const e of events) {
+    if (e.type === "ROUTINE") {
+      const routineType: "MEETING" | "TRAINING" = e.title === ROUTINE_TITLE.MEETING ? "MEETING" : "TRAINING";
+      pushItem(e.startAt, {
+        key: e.id,
+        label: `${formatTime(e.startAt)} ${e.title}`,
+        type: "ROUTINE",
+        attended: routineAttended(e.startAt, routineType),
+        routineDate: dateKey(e.startAt),
+        routineType,
+        eventId: e.id,
+      });
+      continue;
+    }
     const type: DayItem["type"] = e.type === "VISIT" ? "VISIT" : e.type === "TRAINING" ? "TRAINING" : "CUSTOM";
     const seq = visitSeqMap.get(e.id);
     const label =
@@ -149,6 +158,8 @@ export async function getCalendarItems(
       type,
       href: e.customerId ? `/customers/${e.customerId}` : undefined,
       eventId: e.id,
+      // 방문은 예정 시간이 지나면 자동으로 "완료된 방문"으로 취급 (고객상세 방문이력과 동일한 기준)
+      attended: type === "VISIT" ? e.startAt <= new Date() : undefined,
     });
   }
 

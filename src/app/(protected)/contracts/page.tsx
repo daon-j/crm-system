@@ -38,8 +38,8 @@ export default async function ContractsPage({
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">계약관리</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-2xl font-bold text-ink">계약관리</h1>
+          <p className="text-sm text-ink-muted mt-1">
             신규체결 {contracts.length}건
             {Object.keys(byCategory).length > 0 &&
               ` · ${Object.entries(byCategory)
@@ -49,7 +49,7 @@ export default async function ContractsPage({
         </div>
         <Link
           href="/contracts/new"
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
         >
           + 계약 등록
         </Link>
@@ -60,7 +60,7 @@ export default async function ContractsPage({
           <Link
             href="/contracts"
             className={`rounded-full px-3 py-1 text-xs font-medium ${
-              !insurerFilter ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              !insurerFilter ? "bg-primary text-white" : "bg-surface-muted text-ink-2 hover:bg-border/40"
             }`}
           >
             전체 {allContracts.length}
@@ -70,7 +70,7 @@ export default async function ContractsPage({
               key={ins}
               href={`/contracts?insurer=${encodeURIComponent(ins)}`}
               className={`rounded-full px-3 py-1 text-xs font-medium ${
-                insurerFilter === ins ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                insurerFilter === ins ? "bg-primary text-white" : "bg-surface-muted text-ink-2 hover:bg-border/40"
               }`}
             >
               {ins} {insurerCounts[ins]}
@@ -79,9 +79,53 @@ export default async function ContractsPage({
         </div>
       )}
 
-      <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+      <div className="lg:hidden space-y-2">
+        {contracts.map((c) => {
+          const dLeft = c.expiryDate ? daysUntil(c.expiryDate) : null;
+          return (
+            <div key={c.id} className="rounded-xl border border-border bg-surface p-3.5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 text-xs text-ink-muted">
+                    <span className="font-medium">{c.insurer}</span>
+                    {dLeft !== null && dLeft <= 30 && dLeft >= 0 && (
+                      <span className="rounded bg-accent-soft px-1.5 py-0.5 text-[11px] font-medium text-accent">
+                        D-{dLeft}
+                      </span>
+                    )}
+                  </div>
+                  <Link href={`/customers/${c.customerId}`} className="mt-0.5 block truncate font-semibold text-ink hover:underline">
+                    {c.customer.name} · {c.productName}
+                  </Link>
+                  <p className="mt-0.5 text-xs text-ink-muted">
+                    {formatDate(c.joinDate)} 가입 · {formatDate(c.expiryDate)} 만기
+                  </p>
+                </div>
+                <p className="shrink-0 text-sm font-semibold text-ink">
+                  {c.premium ? `${c.premium.toLocaleString()}원` : "-"}
+                </p>
+              </div>
+              <div className="mt-2.5 flex items-center justify-between">
+                <ContractStatusSelect contractId={c.id} status={c.status} />
+                <form action={deleteContract.bind(null, c.id)}>
+                  <button type="submit" className="text-xs text-ink-muted hover:text-danger">
+                    삭제
+                  </button>
+                </form>
+              </div>
+            </div>
+          );
+        })}
+        {contracts.length === 0 && (
+          <p className="rounded-xl border border-border bg-surface px-4 py-10 text-center text-sm text-ink-muted">
+            등록된 계약이 없습니다
+          </p>
+        )}
+      </div>
+
+      <div className="hidden lg:block rounded-xl border border-border bg-surface overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-500 text-left">
+          <thead className="bg-surface-muted text-ink-muted text-left">
             <tr>
               <th className="px-4 py-3 font-medium">고객</th>
               <th className="px-4 py-3 font-medium">보험사</th>
@@ -97,29 +141,29 @@ export default async function ContractsPage({
             {contracts.map((c) => {
               const dLeft = c.expiryDate ? daysUntil(c.expiryDate) : null;
               return (
-                <tr key={c.id} className="border-t border-slate-100 hover:bg-slate-50">
+                <tr key={c.id} className="border-t border-border hover:bg-surface-muted">
                   <td className="px-4 py-3">
-                    <Link href={`/customers/${c.customerId}`} className="font-medium text-blue-700 hover:underline">
+                    <Link href={`/customers/${c.customerId}`} className="font-medium text-primary hover:underline">
                       {c.customer.name}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-slate-600">{c.insurer}</td>
-                  <td className="px-4 py-3 text-slate-600">
+                  <td className="px-4 py-3 text-ink-2">{c.insurer}</td>
+                  <td className="px-4 py-3 text-ink-2">
                     {c.productName}
-                    <span className="ml-1.5 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-500">
+                    <span className="ml-1.5 rounded bg-surface-muted px-1.5 py-0.5 text-[11px] text-ink-muted">
                       {c.category}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-slate-600">{formatDate(c.joinDate)}</td>
-                  <td className="px-4 py-3 text-slate-600">
+                  <td className="px-4 py-3 text-ink-2">{formatDate(c.joinDate)}</td>
+                  <td className="px-4 py-3 text-ink-2">
                     {formatDate(c.expiryDate)}
                     {c.status === "ACTIVE" && dLeft !== null && dLeft <= 30 && dLeft >= 0 && (
-                      <span className="ml-1.5 rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-800">
+                      <span className="ml-1.5 rounded bg-accent-soft px-1.5 py-0.5 text-[11px] font-medium text-accent">
                         D-{dLeft}
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-slate-600">
+                  <td className="px-4 py-3 text-ink-2">
                     {c.premium ? `${c.premium.toLocaleString()}원` : "-"}
                   </td>
                   <td className="px-4 py-3">
@@ -127,7 +171,7 @@ export default async function ContractsPage({
                   </td>
                   <td className="px-4 py-3">
                     <form action={deleteContract.bind(null, c.id)}>
-                      <button type="submit" className="text-xs text-slate-400 hover:text-red-600">
+                      <button type="submit" className="text-xs text-ink-muted hover:text-danger">
                         삭제
                       </button>
                     </form>
@@ -137,7 +181,7 @@ export default async function ContractsPage({
             })}
             {contracts.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-10 text-center text-slate-400">
+                <td colSpan={8} className="px-4 py-10 text-center text-ink-muted">
                   등록된 계약이 없습니다
                 </td>
               </tr>

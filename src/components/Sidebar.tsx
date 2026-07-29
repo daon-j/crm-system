@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logout } from "@/lib/actions/auth";
@@ -24,50 +23,22 @@ export default function Sidebar({
   userEmail: string;
 }) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
   const userLabel = userName ? `${userName} 설계사` : userEmail;
 
   return (
     <>
-      <div className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 lg:hidden">
-        <Link href="/" className="font-bold text-lg text-slate-900">
+      {/* 모바일 상단바 - 네비게이션은 하단 탭바(MobileTabBar)가 담당 */}
+      <div className="flex h-14 items-center border-b border-border bg-surface px-4 lg:hidden">
+        <Link href="/" className="font-bold text-lg text-ink">
           보험CRM
         </Link>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          aria-label="메뉴 열기"
-          className="rounded-lg p-2 text-slate-600 hover:bg-slate-100"
-        >
-          ☰
-        </button>
       </div>
 
-      {open && (
-        <div
-          onClick={() => setOpen(false)}
-          aria-hidden
-          className="fixed inset-0 z-40 bg-black/30 lg:hidden"
-        />
-      )}
-
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-56 shrink-0 flex-col border-r border-slate-200 bg-white transition-transform duration-200 lg:static lg:translate-x-0 ${
-          open ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div className="h-16 flex items-center justify-between px-5 border-b border-slate-200">
-          <Link href="/" onClick={() => setOpen(false)} className="font-bold text-lg text-slate-900">
+      <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-surface lg:static lg:flex">
+        <div className="h-16 flex items-center px-5 border-b border-border">
+          <Link href="/" className="font-bold text-lg text-ink">
             보험CRM
           </Link>
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            aria-label="메뉴 닫기"
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 lg:hidden"
-          >
-            ✕
-          </button>
         </div>
         <nav className="flex-1 py-3 overflow-y-auto">
           <ul className="flex flex-col gap-0.5 px-3">
@@ -80,11 +51,10 @@ export default function Sidebar({
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    onClick={() => setOpen(false)}
                     className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                       active
-                        ? "bg-blue-50 text-blue-700"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        ? "bg-primary/10 text-primary"
+                        : "text-ink-2 hover:bg-surface-muted hover:text-ink"
                     }`}
                   >
                     <span aria-hidden>{item.icon}</span>
@@ -95,12 +65,12 @@ export default function Sidebar({
             })}
           </ul>
         </nav>
-        <div className="border-t border-slate-200 p-3">
-          <p className="truncate px-2 py-1 text-xs text-slate-400">{userLabel}</p>
+        <div className="border-t border-border p-3">
+          <p className="truncate px-2 py-1 text-xs text-ink-muted">{userLabel}</p>
           <form action={logout}>
             <button
               type="submit"
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-ink-2 hover:bg-surface-muted hover:text-ink"
             >
               <span aria-hidden>🚪</span>
               로그아웃

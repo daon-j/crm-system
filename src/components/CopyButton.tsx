@@ -26,7 +26,7 @@ export default function CopyButton({ text, label = "카톡 복사" }: { text: st
     <button
       type="button"
       onClick={handleClick}
-      className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-100"
+      className="rounded-lg border border-accent/40 bg-accent-soft px-3.5 py-1.5 text-xs font-medium text-accent hover:opacity-90"
     >
       {copied ? "✅ 복사됨" : `💬 ${label}`}
     </button>

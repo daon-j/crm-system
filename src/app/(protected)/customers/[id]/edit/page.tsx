@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import CustomerForm from "@/components/CustomerForm";
 import { updateCustomer } from "@/lib/actions/customers";
@@ -38,7 +39,10 @@ export default async function EditCustomerPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900 mb-6">
+      <Link href={`/customers/${customer.id}`} className="text-sm text-ink-muted hover:underline">
+        ← {customer.name} 고객 상세로
+      </Link>
+      <h1 className="text-2xl font-bold text-ink mb-6 mt-1">
         {customer.name} 고객정보 수정
       </h1>
       <CustomerForm

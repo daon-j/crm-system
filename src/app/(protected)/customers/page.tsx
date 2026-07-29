@@ -3,12 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { formatDate, formatPhone, GRADE_LABEL } from "@/lib/format";
 import { requireUser } from "@/lib/auth";
 
-const GRADE_BADGE: Record<string, string> = {
-  A: "bg-amber-100 text-amber-800",
-  B: "bg-blue-100 text-blue-700",
-  C: "bg-slate-100 text-slate-600",
-};
-
 export default async function CustomersPage({
   searchParams,
 }: {
@@ -63,10 +57,10 @@ export default async function CustomersPage({
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">고객관리</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-2xl font-bold text-ink">고객관리</h1>
+          <p className="text-sm text-ink-muted mt-1">
             총 {customers.length}명의 고객 · 모바일동의{" "}
-            <span className={consentedCount < customers.length ? "font-semibold text-red-600" : "text-slate-500"}>
+            <span className={consentedCount < customers.length ? "font-semibold text-danger" : "text-ink-muted"}>
               {consentedCount}/{customers.length}명
             </span>
             {batchId && ` · 콜 시도 ${customers.length - notContactedCount}명 · 미콜 ${notContactedCount}명`}
@@ -75,13 +69,13 @@ export default async function CustomersPage({
         <div className="flex gap-2">
           <Link
             href="/customers/import"
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-ink-2 hover:bg-surface-muted"
           >
             엑셀로 일괄등록
           </Link>
           <Link
             href="/customers/new"
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
           >
             + 신규 고객 등록
           </Link>
@@ -92,7 +86,7 @@ export default async function CustomersPage({
         <Link
           href={query ? `/customers?q=${encodeURIComponent(query)}` : "/customers"}
           className={`rounded-full px-3.5 py-1.5 text-xs font-medium ${
-            !batchId ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            !batchId ? "bg-ink text-white" : "bg-surface-muted text-ink-2 hover:bg-border/40"
           }`}
         >
           전체
@@ -106,7 +100,7 @@ export default async function CustomersPage({
               key={b.id}
               href={href}
               className={`rounded-full px-3.5 py-1.5 text-xs font-medium ${
-                batchId === b.id ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                batchId === b.id ? "bg-ink text-white" : "bg-surface-muted text-ink-2 hover:bg-border/40"
               }`}
             >
               {b.name} ({b._count.customers})
@@ -122,13 +116,59 @@ export default async function CustomersPage({
           name="q"
           defaultValue={query}
           placeholder="이름, 전화번호, 메모로 검색"
-          className="w-full max-w-md rounded-lg border border-slate-300 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full max-w-md rounded-lg border border-border px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
       </form>
 
-      <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+      <div className="lg:hidden space-y-2">
+        {customers.map((c) => (
+          <Link
+            key={c.id}
+            href={`/customers/${c.id}`}
+            className={`block rounded-xl border border-border bg-surface p-3.5 hover:bg-surface-muted ${
+              c.mobileConsent ? "" : "border-l-[3px] border-l-danger"
+            }`}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-baseline gap-1.5">
+                <span className="truncate font-semibold text-ink">{c.name}</span>
+                <span className="shrink-0 text-xs font-medium text-accent">{c.grade}등급</span>
+              </div>
+              {!c.mobileConsent && (
+                <span className="shrink-0 rounded bg-danger-soft px-1.5 py-0.5 text-[11px] font-bold text-danger">
+                  모바일 미동의
+                </span>
+              )}
+            </div>
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-2">
+              <span>{formatPhone(c.phone)}</span>
+              {c.batch && <span>{c.batch.name}</span>}
+              {c.job && <span>{c.job}</span>}
+              <span>상담 {c._count.consultations}건</span>
+            </div>
+            {(c._count.events > 0 || c._count.contracts > 0 || c.referredById) && (
+              <p className="mt-1.5 text-xs text-ink-muted">
+                {[
+                  c._count.events > 0 ? `방문${c._count.events}차` : null,
+                  c._count.contracts > 0 ? "체결" : null,
+                  c.referredById ? "소개" : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            )}
+          </Link>
+        ))}
+        {customers.length === 0 && (
+          <p className="rounded-xl border border-border bg-surface px-4 py-10 text-center text-sm text-ink-muted">
+            {query ? "검색 결과가 없습니다" : "등록된 고객이 없습니다"}
+          </p>
+        )}
+      </div>
+
+      <div className="hidden lg:block rounded-xl border border-border bg-surface overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-500 text-left">
+          <thead className="bg-surface-muted text-ink-muted text-left">
             <tr>
               <th className="px-4 py-3 font-medium">이름</th>
               <th className="px-4 py-3 font-medium">등급</th>
@@ -145,70 +185,49 @@ export default async function CustomersPage({
             {customers.map((c) => (
               <tr
                 key={c.id}
-                className="border-t border-slate-100 hover:bg-slate-50"
+                className="border-t border-border hover:bg-surface-muted"
               >
                 <td className="px-4 py-3">
                   <Link
                     href={`/customers/${c.id}`}
-                    className="font-medium text-blue-700 hover:underline"
+                    className="font-medium text-primary hover:underline"
                   >
                     {c.name}
                   </Link>
                 </td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${GRADE_BADGE[c.grade] ?? GRADE_BADGE.B}`}
-                  >
-                    {c.grade}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-slate-600">{c.batch?.name ?? "-"}</td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-1">
-                    {c._count.events > 0 && (
-                      <span className="rounded bg-sky-100 px-1.5 py-0.5 text-[11px] font-medium text-sky-700">
-                        방문{c._count.events}차
-                      </span>
-                    )}
-                    {c._count.contracts > 0 && (
-                      <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-medium text-emerald-700">
-                        체결
-                      </span>
-                    )}
-                    {c.referredById && (
-                      <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-800">
-                        소개
-                      </span>
-                    )}
-                    {c._count.events === 0 && c._count.contracts === 0 && !c.referredById && (
-                      <span className="text-xs text-slate-400">-</span>
-                    )}
-                  </div>
+                <td className="px-4 py-3 text-accent font-medium">{c.grade}등급</td>
+                <td className="px-4 py-3 text-ink-2">{c.batch?.name ?? "-"}</td>
+                <td className="px-4 py-3 text-ink-muted">
+                  {[
+                    c._count.events > 0 ? `방문${c._count.events}차` : null,
+                    c._count.contracts > 0 ? "체결" : null,
+                    c.referredById ? "소개" : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ") || "-"}
                 </td>
                 <td className="px-4 py-3">
                   {c.mobileConsent ? (
-                    <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-medium text-emerald-700">
-                      동의
-                    </span>
+                    <span className="text-ink-muted">동의</span>
                   ) : (
-                    <span className="rounded bg-red-100 px-1.5 py-0.5 text-[11px] font-bold text-red-700">
+                    <span className="rounded bg-danger-soft px-1.5 py-0.5 text-[11px] font-bold text-danger">
                       미동의
                     </span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-slate-600">{formatPhone(c.phone)}</td>
-                <td className="px-4 py-3 text-slate-600">{c.job ?? "-"}</td>
-                <td className="px-4 py-3 text-slate-600">
+                <td className="px-4 py-3 text-ink-2">{formatPhone(c.phone)}</td>
+                <td className="px-4 py-3 text-ink-2">{c.job ?? "-"}</td>
+                <td className="px-4 py-3 text-ink-2">
                   {c._count.consultations}건
                 </td>
-                <td className="px-4 py-3 text-slate-600">
+                <td className="px-4 py-3 text-ink-2">
                   {formatDate(c.birthDate)}
                 </td>
               </tr>
             ))}
             {customers.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-4 py-10 text-center text-slate-400">
+                <td colSpan={9} className="px-4 py-10 text-center text-ink-muted">
                   {query ? "검색 결과가 없습니다" : "등록된 고객이 없습니다"}
                 </td>
               </tr>
@@ -217,7 +236,7 @@ export default async function CustomersPage({
         </table>
       </div>
 
-      <p className="mt-3 text-xs text-slate-400">
+      <p className="mt-3 text-xs text-ink-muted">
         등급 기준: {GRADE_LABEL.A} · {GRADE_LABEL.B} · {GRADE_LABEL.C}
       </p>
     </div>

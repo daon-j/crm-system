@@ -6,21 +6,19 @@ const KNOWN_LABEL: Record<string, string> = {
 };
 
 const KNOWN_STYLE: Record<string, string> = {
-  MORNING_MEETING: "bg-blue-100 text-blue-700",
-  정보미팅: "bg-blue-100 text-blue-700",
-  MORNING_TRAINING: "bg-emerald-100 text-emerald-700",
-  오전교육: "bg-emerald-100 text-emerald-700",
-  ETC: "bg-slate-100 text-slate-600",
-  기타: "bg-slate-100 text-slate-600",
+  MORNING_MEETING: "bg-info-soft text-info",
+  정보미팅: "bg-info-soft text-info",
+  MORNING_TRAINING: "bg-success-soft text-success",
+  오전교육: "bg-success-soft text-success",
+  ETC: "bg-surface-muted text-ink-2",
+  기타: "bg-surface-muted text-ink-2",
 };
 
 const HASH_PALETTE = [
-  "bg-purple-100 text-purple-700",
-  "bg-pink-100 text-pink-700",
-  "bg-teal-100 text-teal-700",
-  "bg-orange-100 text-orange-700",
-  "bg-cyan-100 text-cyan-700",
-  "bg-indigo-100 text-indigo-700",
+  "bg-primary/10 text-primary",
+  "bg-accent-soft text-accent",
+  "bg-info-soft text-info",
+  "bg-success-soft text-success",
 ];
 
 export function categoryLabel(category: string): string {
