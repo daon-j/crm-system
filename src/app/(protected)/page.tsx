@@ -8,6 +8,7 @@ import { getDashboardLayout, type DashboardSectionKey } from "@/lib/dashboardLay
 import { requireUser } from "@/lib/auth";
 import VisitPrepModal from "@/components/VisitPrepModal";
 import CalendarDayCell from "@/components/CalendarDayCell";
+import CancelEventButton from "@/components/CancelEventButton";
 import { getEnergeticGreeting } from "@/lib/greeting";
 
 const TODO_PRIORITY_ORDER: Record<string, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 };
@@ -248,6 +249,10 @@ export default async function DashboardPage() {
                     >
                       일정 변경
                     </Link>
+                    <CancelEventButton
+                      eventId={e.id}
+                      className="text-xs font-medium text-ink-muted hover:text-danger hover:underline whitespace-nowrap"
+                    />
                   </div>
                 </div>
 
@@ -449,6 +454,7 @@ export default async function DashboardPage() {
                       />
                     )}
                     <Link href={`/calendar/${e.id}/edit`}>수정</Link>
+                    <CancelEventButton eventId={e.id} className="text-xs font-medium text-ink-muted hover:text-danger" />
                   </div>
                 </div>
                 <Link
@@ -550,6 +556,10 @@ export default async function DashboardPage() {
                   >
                     수정
                   </Link>
+                  <CancelEventButton
+                    eventId={e.id}
+                    className="text-xs font-medium text-ink-muted hover:text-danger hover:underline"
+                  />
                 </div>
               </div>
             );

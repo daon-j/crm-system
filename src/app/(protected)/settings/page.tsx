@@ -275,18 +275,18 @@ export default async function SettingsPage() {
                   </form>
                 )}
               </div>
-              <form action={updateMessageTemplate.bind(null, t.id)} className="flex gap-2">
+              <form action={updateMessageTemplate.bind(null, t.id)}>
                 <textarea
                   name="body"
                   defaultValue={t.body}
-                  rows={2}
-                  className="flex-1 rounded-lg border border-border px-2.5 py-1.5 text-sm"
+                  rows={7}
+                  className="w-full rounded-lg border border-border px-2.5 py-1.5 text-sm mb-2"
                 />
                 <button
                   type="submit"
-                  className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-ink-2 hover:bg-surface-muted whitespace-nowrap self-start"
+                  className="w-full rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-primary-hover"
                 >
-                  저장
+                  변경사항 저장
                 </button>
               </form>
               {!t.userId && (
@@ -319,10 +319,12 @@ export default async function SettingsPage() {
           <textarea
             name="body"
             required
-            rows={2}
+            rows={5}
+            defaultValue={"\n\nDB손해보험 보상청구서비스담당자 {{설계사명}}\n{{설계사전화번호}}\n{{설계사내선번호}}"}
             placeholder="문구 내용을 입력하세요"
             className="w-full rounded-lg border border-border px-2.5 py-1.5 text-sm"
           />
+          <p className="text-[11px] text-ink-muted">서명 3줄이 미리 채워져 있어요. 맨 위에 본문 내용만 입력하면 됩니다.</p>
           <button
             type="submit"
             className="rounded-lg bg-ink px-3.5 py-1.5 text-sm font-medium text-white hover:opacity-90"

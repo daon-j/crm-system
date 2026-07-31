@@ -4,6 +4,7 @@ import { useRef } from "react";
 import Link from "next/link";
 import { setRoutineAttendance } from "@/lib/actions/calendar";
 import { TYPE_STYLE, TYPE_DOT, TYPE_TEXT, type DayItem } from "@/lib/calendarTypes";
+import CancelEventButton from "@/components/CancelEventButton";
 
 const MAX_DENSE_LINES = 5;
 
@@ -135,13 +136,16 @@ export default function CalendarDayCell({
                     </button>
                   </form>
                   {r.eventId && (
-                    <Link
-                      href={`/calendar/${r.eventId}/edit`}
-                      className="shrink-0 rounded-lg border border-border px-2 py-1.5 text-xs text-primary"
-                      title="수정 · 취소"
-                    >
-                      ✏️
-                    </Link>
+                    <>
+                      <Link
+                        href={`/calendar/${r.eventId}/edit`}
+                        className="shrink-0 rounded-lg border border-border px-2 py-1.5 text-xs text-primary"
+                        title="수정"
+                      >
+                        ✏️
+                      </Link>
+                      <CancelEventButton eventId={r.eventId} />
+                    </>
                   )}
                 </div>
               ))}
@@ -167,13 +171,16 @@ export default function CalendarDayCell({
                       <div className="min-w-0 flex-1">{content}</div>
                     )}
                     {item.eventId && (
-                      <Link
-                        href={`/calendar/${item.eventId}/edit`}
-                        className="shrink-0 rounded-lg border border-border px-2 py-1.5 text-xs text-primary"
-                        title="수정 · 취소"
-                      >
-                        ✏️
-                      </Link>
+                      <>
+                        <Link
+                          href={`/calendar/${item.eventId}/edit`}
+                          className="shrink-0 rounded-lg border border-border px-2 py-1.5 text-xs text-primary"
+                          title="수정"
+                        >
+                          ✏️
+                        </Link>
+                        <CancelEventButton eventId={item.eventId} />
+                      </>
                     )}
                   </div>
                 );

@@ -1,86 +1,89 @@
 import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
-const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL ?? "file:./dev.db",
-});
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
+
+// 모든 문자 템플릿 하단에 통일해서 붙는 서명
+const SIGNATURE = "DB손해보험 보상청구서비스담당자 {{설계사명}}\n{{설계사전화번호}}\n{{설계사내선번호}}";
 
 async function main() {
   const missedCallTemplate = await prisma.messageTemplate.upsert({
     where: { id: "tpl-missed-call" },
-    update: { category: "부재중(당일)" },
+    update: { category: "부재중(당일)", body: `{{고객명}}님, 연락드렸는데 통화가 어려우셨네요. 편하실 때 회신 부탁드립니다.\n${SIGNATURE}` },
     create: {
       id: "tpl-missed-call",
       name: "부재중 안내",
       category: "부재중(당일)",
-      body: "{{고객명}}님, 연락드렸는데 통화가 어려우셨네요. 편하실 때 회신 부탁드립니다. - {{설계사명}}",
+      body: `{{고객명}}님, 연락드렸는데 통화가 어려우셨네요. 편하실 때 회신 부탁드립니다.\n${SIGNATURE}`,
     },
   });
 
   await prisma.messageTemplate.upsert({
     where: { id: "tpl-missed-call-1" },
-    update: { category: "부재중(2차+)" },
+    update: { category: "부재중(2차+)", body: `{{고객명}}님, 안내 말씀드리려 연락드렸는데 통화가 어려우셨네요. 편하실 때 회신 부탁드립니다.\n${SIGNATURE}` },
     create: {
       id: "tpl-missed-call-1",
       name: "부재중 안내 (1차)",
       category: "부재중(2차+)",
-      body: "{{고객명}}님, 안내 말씀드리려 연락드렸는데 통화가 어려우셨네요. 편하실 때 회신 부탁드립니다. - {{설계사명}}",
+      body: `{{고객명}}님, 안내 말씀드리려 연락드렸는데 통화가 어려우셨네요. 편하실 때 회신 부탁드립니다.\n${SIGNATURE}`,
     },
   });
 
   await prisma.messageTemplate.upsert({
     where: { id: "tpl-missed-call-2" },
-    update: { category: "부재중(2차+)" },
+    update: { category: "부재중(2차+)", body: `{{고객명}}님, 다시 한번 연락드렸는데도 통화가 어려우셨네요. 편하신 시간에 회신 주시면 감사하겠습니다.\n${SIGNATURE}` },
     create: {
       id: "tpl-missed-call-2",
       name: "부재중 안내 (2차)",
       category: "부재중(2차+)",
-      body: "{{고객명}}님, 다시 한번 연락드렸는데도 통화가 어려우셨네요. 편하신 시간에 회신 주시면 감사하겠습니다. - {{설계사명}}",
+      body: `{{고객명}}님, 다시 한번 연락드렸는데도 통화가 어려우셨네요. 편하신 시간에 회신 주시면 감사하겠습니다.\n${SIGNATURE}`,
     },
   });
 
   const visitConfirmTemplate = await prisma.messageTemplate.upsert({
     where: { id: "tpl-visit-confirm" },
-    update: { category: "방문확정" },
+    update: { category: "방문확정", body: `{{고객명}}님, 방문 일정이 {{방문일시}}로 확정되었습니다. 그때 뵙겠습니다.\n${SIGNATURE}` },
     create: {
       id: "tpl-visit-confirm",
       name: "방문예약 확정",
       category: "방문확정",
-      body: "{{고객명}}님, 방문 일정이 {{방문일시}}로 확정되었습니다. 그때 뵙겠습니다. - {{설계사명}}",
+      body: `{{고객명}}님, 방문 일정이 {{방문일시}}로 확정되었습니다. 그때 뵙겠습니다.\n${SIGNATURE}`,
     },
   });
 
   await prisma.messageTemplate.upsert({
     where: { id: "tpl-birthday" },
-    update: { category: "생일" },
+    update: { category: "생일", body: `{{고객명}}님, 생일 진심으로 축하드립니다! 항상 건강하시길 바랍니다.\n${SIGNATURE}` },
     create: {
       id: "tpl-birthday",
       name: "생일 축하",
       category: "생일",
-      body: "{{고객명}}님, 생일 진심으로 축하드립니다! 항상 건강하시길 바랍니다. - {{설계사명}}",
+      body: `{{고객명}}님, 생일 진심으로 축하드립니다! 항상 건강하시길 바랍니다.\n${SIGNATURE}`,
     },
   });
 
   await prisma.messageTemplate.upsert({
     where: { id: "tpl-monthly" },
-    update: { category: "월간안부" },
+    update: { category: "월간안부", body: `{{고객명}}님, 안녕하세요. 이번 달 안부 인사드립니다. 자동차 쿠폰도 함께 보내드려요!\n${SIGNATURE}` },
     create: {
       id: "tpl-monthly",
       name: "월간 안부 + 자동차쿠폰",
       category: "월간안부",
-      body: "{{고객명}}님, 안녕하세요. 이번 달 안부 인사드립니다. 자동차 쿠폰도 함께 보내드려요! - {{설계사명}}",
+      body: `{{고객명}}님, 안녕하세요. 이번 달 안부 인사드립니다. 자동차 쿠폰도 함께 보내드려요!\n${SIGNATURE}`,
     },
   });
 
   await prisma.messageTemplate.upsert({
     where: { id: "tpl-expiry" },
-    update: { category: "만기알림" },
+    update: { category: "만기알림", body: `{{고객명}}님, 가입하신 {{상품명}}이 {{만기일}}에 만기됩니다. 상담이 필요하시면 편히 연락 주세요.\n${SIGNATURE}` },
     create: {
       id: "tpl-expiry",
       name: "만기 30일 전 안내",
       category: "만기알림",
-      body: "{{고객명}}님, 가입하신 {{상품명}}이 {{만기일}}에 만기됩니다. 상담이 필요하시면 편히 연락 주세요. - {{설계사명}}",
+      body: `{{고객명}}님, 가입하신 {{상품명}}이 {{만기일}}에 만기됩니다. 상담이 필요하시면 편히 연락 주세요.\n${SIGNATURE}`,
     },
   });
 
@@ -98,9 +101,7 @@ async function main() {
 고객정보 확인차 고객님께연락드릴 예정입니다.
 통화 가능시간대를 회신 해주시는 분들은 남겨주신 시간대에 연락드리고 시간대를 지정하지 않으신 분들은 순차적으로 연락드리겠습니다.
 앞으로 보험을 유지하시는동안 불편함 없도록 도움드릴수있는 담당자가 되도록 하겠습니다^^
-[DB손해보험 보상청구서비스담당자 {{설계사명}}]
-{{설계사전화번호}}
-{{설계사내선번호}}`,
+${SIGNATURE}`,
     },
     {
       id: "tpl-db-2",
@@ -113,9 +114,7 @@ async function main() {
 보험금 청구, 계약 관련 문의, 주소·연락처 변경 등 도움이 필요하시면 언제든 편하게 연락 부탁드립니다.
 앞으로 고객님께서 보험을 유지하시는 동안 불편함이 없도록 도움드릴 수 있는 담당자가 되겠습니다.^^
 좋은 하루 되세요.
-[DB손해보험 보상청구서비스 담당자 {{설계사명}}]
-{{설계사전화번호}}
-{{설계사내선번호}}`,
+${SIGNATURE}`,
     },
     {
       id: "tpl-db-3",
@@ -130,9 +129,7 @@ async function main() {
 보험은 한 분의 의견만 듣기보다는 여러 담당자의 의견을 들어보시는 것도 도움이 될 수 있습니다. 혹시 보험금 청구와 관련하여 놓치신 부분이 있거나 궁금하신 점이 있으시면 언제든 편하게 연락 주세요.
 DB손해보험 담당자로서 성실히 안내해 드리겠습니다.
 좋은 하루 되세요.
-[DB손해보험 보상청구서비스 담당자 {{설계사명}}]
-{{설계사전화번호}}
-{{설계사내선번호}}`,
+${SIGNATURE}`,
     },
     {
       id: "tpl-db-4",
@@ -151,9 +148,7 @@ DB손해보험 보상서비스 담당자 {{설계사명}}입니다.
 도움드릴 수 있는 담당자가 되도록 하겠습니다.
 오늘도 좋은하루 되세요^-^
 감사합니다.
-[DB 보상청구서비스담당자 {{설계사명}}]
-{{설계사전화번호}}
-{{설계사내선번호}}`,
+${SIGNATURE}`,
     },
     {
       id: "tpl-db-5",
@@ -168,7 +163,8 @@ DB손해보험 보상서비스
 장소 : {{방문장소}}
 "예약확정"🍀
 변동사항 시 연락주시면 감사하겠습니다
-오늘하루 행복하세요~~^^*`,
+오늘하루 행복하세요~~^^*
+${SIGNATURE}`,
     },
     {
       id: "tpl-db-6",
@@ -183,9 +179,7 @@ DB손해보험 보상청구서비스 담당자 {{설계사명}}입니다.
 통화 가능하신 시간대를 회신주시면 시간 맞춰 연락드리겠습니다.
 혹시 보험금 청구나 계약 관련 문의사항이 있으시면 문자나 전화로 편하게 연락주시기 바랍니다.^^
 오늘도 행복한 하루되세요~
-[DB손해보험 보상청구서비스 담당자 {{설계사명}}]
-{{설계사전화번호}}
-{{설계사내선번호}}`,
+${SIGNATURE}`,
     },
     {
       id: "tpl-db-7",
@@ -206,9 +200,7 @@ DB손해보험 보상서비스 담당자 {{설계사명}}입니다.
 {{계절인사}}
 오늘도 좋은 하루 보내세요.^-^
 감사합니다.
-[DB 보상청구서비스담당자 {{설계사명}}]
-{{설계사전화번호}}
-{{설계사내선번호}}`,
+${SIGNATURE}`,
     },
     {
       id: "tpl-db-8",
@@ -223,9 +215,7 @@ DB손해보험 보상청구서비스 담당자 {{설계사명}}입니다.
 통화 가능하신 시간대를 회신 주시면 고객님 편하신 시간에 맞춰 연락드리겠습니다.^^
 {{계절인사}}
 감사합니다.
-[DB손해보험 보상청구서비스 담당자 {{설계사명}}]
-{{설계사전화번호}}
-{{설계사내선번호}}`,
+${SIGNATURE}`,
     },
     {
       id: "tpl-db-9",
@@ -238,9 +228,7 @@ DB손해보험 보상청구서비스 담당자 {{설계사명}}입니다.
 {{계절인사}}
 {{통화예정일시}} 통화 때 뵙겠습니다.
 감사합니다.
-[DB손해보험 보상청구서비스 담당자 {{설계사명}}]
-{{설계사전화번호}}
-{{설계사내선번호}}`,
+${SIGNATURE}`,
     },
     {
       id: "tpl-db-10",
@@ -252,9 +240,7 @@ DB손해보험 보상청구서비스 담당자 {{설계사명}}입니다.
 고객님과 {{가족구성원}} 보험 보장분석 자료를 잘 준비하여 다음에 뵐 때 도움이 될 수 있도록 안내드리겠습니다.
 일정 관련해서는 {{다음연락예정일}}에 다시 연락드려 편하신 시간을 확인하겠습니다.
 {{계절인사}}
-[DB손해보험 보상청구서비스 담당자 {{설계사명}}]
-{{설계사전화번호}}
-{{설계사내선번호}}`,
+${SIGNATURE}`,
     },
   ];
 

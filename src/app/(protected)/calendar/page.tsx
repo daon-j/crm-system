@@ -7,6 +7,7 @@ import { getCurrentMonthBatch } from "@/lib/currentMonthBatch";
 import QuickEventFields from "@/components/QuickEventFields";
 import CalendarDayCell from "@/components/CalendarDayCell";
 import CalendarViewToggle from "@/components/CalendarViewToggle";
+import CancelEventButton from "@/components/CancelEventButton";
 import { requireUser } from "@/lib/auth";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -234,12 +235,18 @@ export default async function CalendarPage({
                                 </button>
                               </form>
                               {r.eventId && (
-                                <Link
-                                  href={`/calendar/${r.eventId}/edit`}
-                                  className="shrink-0 rounded-lg border border-border px-1.5 py-1 text-[11px] text-primary"
-                                >
-                                  ✏️
-                                </Link>
+                                <>
+                                  <Link
+                                    href={`/calendar/${r.eventId}/edit`}
+                                    className="shrink-0 rounded-lg border border-border px-1.5 py-1 text-[11px] text-primary"
+                                  >
+                                    ✏️
+                                  </Link>
+                                  <CancelEventButton
+                                    eventId={r.eventId}
+                                    className="shrink-0 rounded-lg border border-border px-1.5 py-1 text-[11px] text-ink-muted hover:text-danger"
+                                  />
+                                </>
                               )}
                             </div>
                           ))}
@@ -273,12 +280,18 @@ export default async function CalendarPage({
                                   <div className="min-w-0 flex-1">{content}</div>
                                 )}
                                 {item.eventId && (
-                                  <Link
-                                    href={`/calendar/${item.eventId}/edit`}
-                                    className="shrink-0 rounded-lg border border-border px-1.5 py-1 text-[11px] text-primary"
-                                  >
-                                    ✏️
-                                  </Link>
+                                  <>
+                                    <Link
+                                      href={`/calendar/${item.eventId}/edit`}
+                                      className="shrink-0 rounded-lg border border-border px-1.5 py-1 text-[11px] text-primary"
+                                    >
+                                      ✏️
+                                    </Link>
+                                    <CancelEventButton
+                                      eventId={item.eventId}
+                                      className="shrink-0 rounded-lg border border-border px-1.5 py-1 text-[11px] text-ink-muted hover:text-danger"
+                                    />
+                                  </>
                                 )}
                               </div>
                             );

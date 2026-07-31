@@ -6,6 +6,7 @@ import { addFamilyMember, deleteFamilyMember, deleteCustomer } from "@/lib/actio
 import { requireUser } from "@/lib/auth";
 import { decrypt } from "@/lib/encryption";
 import ExpandableNameList from "@/components/ExpandableNameList";
+import CancelEventButton from "@/components/CancelEventButton";
 
 export default async function CustomerDetailPage({
   params,
@@ -358,12 +359,18 @@ export default async function CustomerDetailPage({
                   <ChangeLogNote logs={e.changeLogs} />
                 </div>
               </div>
-              <Link
-                href={`/calendar/${e.id}/edit`}
-                className="shrink-0 text-xs font-medium text-primary hover:underline"
-              >
-                수정
-              </Link>
+              <div className="shrink-0 flex items-center gap-2">
+                <Link
+                  href={`/calendar/${e.id}/edit`}
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  수정
+                </Link>
+                <CancelEventButton
+                  eventId={e.id}
+                  className="text-xs font-medium text-ink-muted hover:text-danger hover:underline"
+                />
+              </div>
             </div>
           ))}
 
