@@ -86,7 +86,7 @@ export default async function CustomersPage({
         <Link
           href={query ? `/customers?q=${encodeURIComponent(query)}` : "/customers"}
           className={`rounded-full px-3.5 py-1.5 text-xs font-medium ${
-            !batchId ? "bg-ink text-white" : "bg-surface-muted text-ink-2 hover:bg-border/40"
+            !batchId ? "bg-ink text-ink-ink" : "bg-surface-muted text-ink-2 hover:bg-border/40"
           }`}
         >
           전체
@@ -100,7 +100,7 @@ export default async function CustomersPage({
               key={b.id}
               href={href}
               className={`rounded-full px-3.5 py-1.5 text-xs font-medium ${
-                batchId === b.id ? "bg-ink text-white" : "bg-surface-muted text-ink-2 hover:bg-border/40"
+                batchId === b.id ? "bg-ink text-ink-ink" : "bg-surface-muted text-ink-2 hover:bg-border/40"
               }`}
             >
               {b.name} ({b._count.customers})

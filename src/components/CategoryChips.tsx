@@ -72,7 +72,7 @@ export default function CategoryChips({
           <button
             type="button"
             onClick={addChip}
-            className="rounded-lg bg-ink px-3 py-1.5 text-xs font-medium text-white hover:opacity-90"
+            className="rounded-lg bg-ink px-3 py-1.5 text-xs font-medium text-ink-ink hover:opacity-90"
           >
             추가
           </button>

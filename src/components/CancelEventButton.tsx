@@ -6,13 +6,16 @@ export default function CancelEventButton({
   eventId,
   className = "shrink-0 rounded-lg border border-border px-2 py-1.5 text-xs text-ink-muted hover:text-danger hover:border-danger/30",
   label = "취소",
+  returnTo,
 }: {
   eventId: string;
   className?: string;
   label?: string;
+  returnTo?: string;
 }) {
   return (
     <form action={cancelEvent.bind(null, eventId)}>
+      {returnTo && <input type="hidden" name="returnTo" value={returnTo} />}
       <button
         type="submit"
         title="일정 취소"

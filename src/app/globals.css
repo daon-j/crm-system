@@ -14,6 +14,7 @@
   --color-ink: #1c2b3a;
   --color-ink-2: #4b5768;
   --color-ink-muted: #8c8574;
+  --color-ink-ink: #f7f5ef;
 
   /* 주 색상 (네이비) */
   --color-primary: #1d3a5f;
@@ -51,6 +52,7 @@
     --color-ink: #eef1f5;
     --color-ink-2: #c3c9d1;
     --color-ink-muted: #8a92a0;
+    --color-ink-ink: #14181d;
     --color-primary: #4d7fb0;
     --color-primary-hover: #5f8fbe;
     --color-primary-ink: #eef1f5;
@@ -81,6 +83,7 @@
   --color-ink: #eef1f5;
   --color-ink-2: #c3c9d1;
   --color-ink-muted: #8a92a0;
+  --color-ink-ink: #14181d;
   --color-primary: #4d7fb0;
   --color-primary-hover: #5f8fbe;
   --color-primary-ink: #eef1f5;
@@ -108,6 +111,7 @@
   --color-ink: #1c2b3a;
   --color-ink-2: #4b5768;
   --color-ink-muted: #8c8574;
+  --color-ink-ink: #f7f5ef;
   --color-primary: #1d3a5f;
   --color-primary-hover: #16304e;
   --color-primary-ink: #f7f5ef;
@@ -136,6 +140,7 @@
   --color-ink: var(--color-ink);
   --color-ink-2: var(--color-ink-2);
   --color-ink-muted: var(--color-ink-muted);
+  --color-ink-ink: var(--color-ink-ink);
   --color-primary: var(--color-primary);
   --color-primary-hover: var(--color-primary-hover);
   --color-primary-ink: var(--color-primary-ink);

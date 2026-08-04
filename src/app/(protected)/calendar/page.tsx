@@ -100,7 +100,7 @@ export default async function CalendarPage({
           />
           <button
             type="submit"
-            className="rounded-lg bg-ink px-3.5 py-1.5 text-sm font-medium text-white hover:opacity-90"
+            className="rounded-lg bg-ink px-3.5 py-1.5 text-sm font-medium text-ink-ink hover:opacity-90"
           >
             추가
           </button>
@@ -126,6 +126,7 @@ export default async function CalendarPage({
                 label={`${d.getMonth() + 1}월 ${d.getDate()}일 (${weekday})`}
                 isToday={key === dateKey(now)}
                 inMonth={d.getMonth() === month}
+                returnTo="/calendar"
                 items={items}
               />
             );
@@ -237,13 +238,14 @@ export default async function CalendarPage({
                               {r.eventId && (
                                 <>
                                   <Link
-                                    href={`/calendar/${r.eventId}/edit`}
+                                    href={`/calendar/${r.eventId}/edit?from=%2Fcalendar`}
                                     className="shrink-0 rounded-lg border border-border px-1.5 py-1 text-[11px] text-primary"
                                   >
                                     ✏️
                                   </Link>
                                   <CancelEventButton
                                     eventId={r.eventId}
+                                    returnTo="/calendar"
                                     className="shrink-0 rounded-lg border border-border px-1.5 py-1 text-[11px] text-ink-muted hover:text-danger"
                                   />
                                 </>
@@ -282,13 +284,14 @@ export default async function CalendarPage({
                                 {item.eventId && (
                                   <>
                                     <Link
-                                      href={`/calendar/${item.eventId}/edit`}
+                                      href={`/calendar/${item.eventId}/edit?from=%2Fcalendar`}
                                       className="shrink-0 rounded-lg border border-border px-1.5 py-1 text-[11px] text-primary"
                                     >
                                       ✏️
                                     </Link>
                                     <CancelEventButton
                                       eventId={item.eventId}
+                                      returnTo="/calendar"
                                       className="shrink-0 rounded-lg border border-border px-1.5 py-1 text-[11px] text-ink-muted hover:text-danger"
                                     />
                                   </>

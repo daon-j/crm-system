@@ -67,7 +67,7 @@ export default async function MessageHistoryPage({
         </div>
         <button
           type="submit"
-          className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-ink-ink hover:opacity-90"
         >
           조회
         </button>

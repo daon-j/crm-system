@@ -15,6 +15,7 @@ export default function CalendarDayCell({
   inMonth,
   items,
   dense = false,
+  returnTo,
 }: {
   dayNum: number;
   label: string;
@@ -22,6 +23,7 @@ export default function CalendarDayCell({
   inMonth: boolean;
   items: DayItem[];
   dense?: boolean;
+  returnTo?: string;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const routineItems = items.filter((i) => i.type === "ROUTINE");
@@ -138,13 +140,13 @@ export default function CalendarDayCell({
                   {r.eventId && (
                     <>
                       <Link
-                        href={`/calendar/${r.eventId}/edit`}
+                        href={returnTo ? `/calendar/${r.eventId}/edit?from=${encodeURIComponent(returnTo)}` : `/calendar/${r.eventId}/edit`}
                         className="shrink-0 rounded-lg border border-border px-2 py-1.5 text-xs text-primary"
                         title="수정"
                       >
                         ✏️
                       </Link>
-                      <CancelEventButton eventId={r.eventId} />
+                      <CancelEventButton eventId={r.eventId} returnTo={returnTo} />
                     </>
                   )}
                 </div>
@@ -173,13 +175,13 @@ export default function CalendarDayCell({
                     {item.eventId && (
                       <>
                         <Link
-                          href={`/calendar/${item.eventId}/edit`}
+                          href={returnTo ? `/calendar/${item.eventId}/edit?from=${encodeURIComponent(returnTo)}` : `/calendar/${item.eventId}/edit`}
                           className="shrink-0 rounded-lg border border-border px-2 py-1.5 text-xs text-primary"
                           title="수정"
                         >
                           ✏️
                         </Link>
-                        <CancelEventButton eventId={item.eventId} />
+                        <CancelEventButton eventId={item.eventId} returnTo={returnTo} />
                       </>
                     )}
                   </div>

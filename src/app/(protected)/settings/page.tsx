@@ -103,7 +103,7 @@ export default async function SettingsPage() {
             </div>
             <button
               type="submit"
-              className="rounded-lg bg-ink px-3.5 py-1.5 text-sm font-medium text-white hover:opacity-90"
+              className="rounded-lg bg-ink px-3.5 py-1.5 text-sm font-medium text-ink-ink hover:opacity-90"
             >
               저장
             </button>
@@ -241,7 +241,7 @@ export default async function SettingsPage() {
           </label>
           <button
             type="submit"
-            className="rounded-lg bg-ink px-3.5 py-1.5 text-sm font-medium text-white hover:opacity-90"
+            className="rounded-lg bg-ink px-3.5 py-1.5 text-sm font-medium text-ink-ink hover:opacity-90"
           >
             추가
           </button>
@@ -327,7 +327,7 @@ export default async function SettingsPage() {
           <p className="text-[11px] text-ink-muted">서명 3줄이 미리 채워져 있어요. 맨 위에 본문 내용만 입력하면 됩니다.</p>
           <button
             type="submit"
-            className="rounded-lg bg-ink px-3.5 py-1.5 text-sm font-medium text-white hover:opacity-90"
+            className="rounded-lg bg-ink px-3.5 py-1.5 text-sm font-medium text-ink-ink hover:opacity-90"
           >
             템플릿 추가
           </button>

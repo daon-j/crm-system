@@ -4,14 +4,18 @@ import { prisma } from "@/lib/prisma";
 import { toDateTimeInputValue, formatDateTime } from "@/lib/format";
 import { updateEvent, cancelEvent } from "@/lib/actions/calendar";
 import { requireUser } from "@/lib/auth";
+import { isSafeInternalPath } from "@/lib/flash";
 
 export default async function EditCalendarEventPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   const user = await requireUser();
   const { id } = await params;
+  const { from } = await searchParams;
   const event = await prisma.calendarEvent.findFirst({
     where: { id, userId: user.id },
     include: { customer: true, changeLogs: { orderBy: { createdAt: "desc" } } },
@@ -21,8 +25,16 @@ export default async function EditCalendarEventPage({
   const boundUpdate = updateEvent.bind(null, event.id);
   const boundCancel = cancelEvent.bind(null, event.id);
 
-  const listBackHref = event.customerId ? `/customers/${event.customerId}` : "/calendar";
-  const listBackLabel = event.customerId ? "← 고객 상세로" : "← 캘린더";
+  const defaultBackHref = event.customerId ? `/customers/${event.customerId}` : "/calendar";
+  const listBackHref = isSafeInternalPath(from) ? from : defaultBackHref;
+  const listBackLabel =
+    listBackHref === "/"
+      ? "← 홈으로"
+      : listBackHref === "/calendar"
+        ? "← 캘린더로"
+        : listBackHref.startsWith("/customers/")
+          ? "← 고객 상세로"
+          : "← 이전 화면으로";
 
   return (
     <div className="max-w-xl">
@@ -68,6 +80,7 @@ export default async function EditCalendarEventPage({
       )}
 
       <form action={boundUpdate} noValidate className="rounded-xl border border-border bg-surface p-5 space-y-4">
+        {isSafeInternalPath(from) && <input type="hidden" name="returnTo" value={from} />}
         {event.type === "ROUTINE" ? (
           <input type="hidden" name="type" value="ROUTINE" />
         ) : (
@@ -178,10 +191,7 @@ export default async function EditCalendarEventPage({
           >
             저장하기
           </button>
-          <Link
-            href={event.customerId ? `/customers/${event.customerId}` : "/calendar"}
-            className="text-sm text-ink-muted hover:underline"
-          >
+          <Link href={listBackHref} className="text-sm text-ink-muted hover:underline">
             취소하고 돌아가기
           </Link>
         </div>
@@ -195,6 +205,7 @@ export default async function EditCalendarEventPage({
           취소해도 기록은 지워지지 않고 고객 상세페이지의 방문이력에 &quot;취소됨&quot;으로 계속 남습니다.
         </p>
         <form action={boundCancel} className="space-y-2">
+          {isSafeInternalPath(from) && <input type="hidden" name="returnTo" value={from} />}
           <input
             name="reason"
             placeholder="취소 사유 (예: 고객 사정으로 방문 취소)"

@@ -252,7 +252,7 @@ export default async function CustomerDetailPage({
           </div>
           <button
             type="submit"
-            className="rounded-lg bg-ink px-3.5 py-1.5 text-sm font-medium text-white hover:opacity-90"
+            className="rounded-lg bg-ink px-3.5 py-1.5 text-sm font-medium text-ink-ink hover:opacity-90"
           >
             추가
           </button>
@@ -361,13 +361,14 @@ export default async function CustomerDetailPage({
               </div>
               <div className="shrink-0 flex items-center gap-2">
                 <Link
-                  href={`/calendar/${e.id}/edit`}
+                  href={`/calendar/${e.id}/edit?from=${encodeURIComponent(`/customers/${customer.id}`)}`}
                   className="text-xs font-medium text-primary hover:underline"
                 >
                   수정
                 </Link>
                 <CancelEventButton
                   eventId={e.id}
+                  returnTo={`/customers/${customer.id}`}
                   className="text-xs font-medium text-ink-muted hover:text-danger hover:underline"
                 />
               </div>

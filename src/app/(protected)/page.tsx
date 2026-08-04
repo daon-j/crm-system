@@ -244,13 +244,14 @@ export default async function DashboardPage() {
                       />
                     )}
                     <Link
-                      href={`/calendar/${e.id}/edit`}
+                      href={`/calendar/${e.id}/edit?from=%2F`}
                       className="text-xs font-medium text-ink-muted hover:text-primary hover:underline whitespace-nowrap"
                     >
                       일정 변경
                     </Link>
                     <CancelEventButton
                       eventId={e.id}
+                      returnTo="/"
                       className="text-xs font-medium text-ink-muted hover:text-danger hover:underline whitespace-nowrap"
                     />
                   </div>
@@ -374,7 +375,7 @@ export default async function DashboardPage() {
           </select>
           <button
             type="submit"
-            className="rounded-lg bg-ink px-3.5 py-2 text-sm font-medium text-white hover:opacity-90 whitespace-nowrap"
+            className="rounded-lg bg-ink px-3.5 py-2 text-sm font-medium text-ink-ink hover:opacity-90 whitespace-nowrap"
           >
             추가
           </button>
@@ -453,8 +454,8 @@ export default async function DashboardPage() {
                         triggerClassName="text-xs font-medium text-accent"
                       />
                     )}
-                    <Link href={`/calendar/${e.id}/edit`}>수정</Link>
-                    <CancelEventButton eventId={e.id} className="text-xs font-medium text-ink-muted hover:text-danger" />
+                    <Link href={`/calendar/${e.id}/edit?from=%2F`}>수정</Link>
+                    <CancelEventButton eventId={e.id} returnTo="/" className="text-xs font-medium text-ink-muted hover:text-danger" />
                   </div>
                 </div>
                 <Link
@@ -551,13 +552,14 @@ export default async function DashboardPage() {
                     />
                   )}
                   <Link
-                    href={`/calendar/${e.id}/edit`}
+                    href={`/calendar/${e.id}/edit?from=%2F`}
                     className="text-xs font-medium text-ink-muted hover:text-primary hover:underline"
                   >
                     수정
                   </Link>
                   <CancelEventButton
                     eventId={e.id}
+                    returnTo="/"
                     className="text-xs font-medium text-ink-muted hover:text-danger hover:underline"
                   />
                 </div>
@@ -592,6 +594,7 @@ export default async function DashboardPage() {
                 label={`${d.getMonth() + 1}월 ${d.getDate()}일 (${WEEKDAYS[d.getDay()]})`}
                 isToday={key === dateKey(now)}
                 inMonth
+                returnTo="/"
                 items={miniItemsByDay.get(key) ?? []}
                 dense
               />
@@ -614,6 +617,7 @@ export default async function DashboardPage() {
                 label={`${d.getMonth() + 1}월 ${d.getDate()}일 (${WEEKDAYS[d.getDay()]})`}
                 isToday={key === dateKey(now)}
                 inMonth
+                returnTo="/"
                 items={miniItemsByDay.get(key) ?? []}
               />
             );

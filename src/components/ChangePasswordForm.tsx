@@ -39,7 +39,7 @@ export default function ChangePasswordForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="rounded-lg bg-ink px-3.5 py-1.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+        className="rounded-lg bg-ink px-3.5 py-1.5 text-sm font-medium text-ink-ink hover:opacity-90 disabled:opacity-50"
       >
         {isPending ? "변경 중..." : "비밀번호 변경"}
       </button>
