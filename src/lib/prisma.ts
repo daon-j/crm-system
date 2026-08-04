@@ -7,11 +7,12 @@ declare global {
 }
 
 function createPrismaClient() {
-  // Vercel처럼 서버리스 환경에서는 함수 인스턴스마다 커넥션 풀이 따로 열려서,
-  // 풀 하나당 여러 커넥션(pg 기본값 10개)을 잡으면 클라우드 DB 쪽 동시 연결 한도를
-  // 순식간에 채워 "가끔 저장 실패" 같은 간헐적 오류가 난다. 인스턴스당 1개로 제한하고
-  // DB 앞단의 커넥션 풀러(pooled.db.prisma.io)가 실제 팬아웃을 담당하도록 한다.
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
+  // Vercel처럼 서버리스 환경에서는 함수 인스턴스마다 커넥션 풀이 따로 열리므로,
+  // pg 기본값(10개)까지는 열지 않고 인스턴스당 소수로 제한한다. 1개로 제한하면
+  // 대시보드처럼 Promise.all로 여러 쿼리를 동시에 날리는 페이지가 커넥션 하나를
+  // 두고 줄서서 처리되며 느려지므로, DB 앞단의 커넥션 풀러(pooled.db.prisma.io)가
+  // 실제 팬아웃을 담당한다는 전제 하에 약간의 동시성은 허용한다.
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
   const adapter = new PrismaPg(pool);
   return new PrismaClient({ adapter });
 }
