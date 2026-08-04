@@ -53,25 +53,28 @@ export default function CalendarDayCell({
         type="button"
         onClick={() => dialogRef.current?.showModal()}
         className={`flex flex-col items-center gap-1 rounded-lg pt-1.5 transition-colors sm:pt-2 ${
-          dense ? "min-h-[2.6rem]" : "aspect-[1/1.05]"
+          dense ? "min-h-[2.6rem] lg:min-h-[4.5rem]" : "aspect-[1/1.05]"
         } ${isToday ? "bg-info-soft" : "hover:bg-surface-muted"} ${inMonth ? "" : "opacity-35"}`}
       >
         <span
-          className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold sm:h-6 sm:w-6 sm:text-xs ${
+          className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold sm:h-6 sm:w-6 sm:text-xs lg:h-7 lg:w-7 lg:text-sm ${
             isToday ? "bg-primary text-primary-ink" : "text-ink"
           }`}
         >
           {dayNum}
         </span>
         {dense ? (
-          <span className="flex w-full flex-col gap-[1px] px-[2px]">
+          <span className="flex w-full flex-col gap-[1px] px-[2px] lg:gap-0.5 lg:px-1">
             {visibleDenseLines.map((l) => (
-              <span key={l.key} className={`truncate text-center text-[8px] font-bold leading-tight ${l.color}`}>
+              <span
+                key={l.key}
+                className={`truncate text-center text-[8px] font-bold leading-tight lg:text-[11px] ${l.color}`}
+              >
                 {l.text}
               </span>
             ))}
             {extraDenseCount > 0 && (
-              <span className="text-center text-[8px] font-bold leading-tight text-ink-muted">
+              <span className="text-center text-[8px] font-bold leading-tight text-ink-muted lg:text-[11px]">
                 +{extraDenseCount}
               </span>
             )}

@@ -107,7 +107,7 @@ export default async function CalendarPage({
         </form>
       </details>
 
-      {/* 데스크탑: 기존 점 표시 격자 그대로 유지 */}
+      {/* 데스크탑: 모바일과 동일하게 칸 안에 실제 일정 텍스트 표시 */}
       <div className="hidden lg:block rounded-xl border border-border bg-surface p-2 sm:p-3">
         <div className="grid grid-cols-7 gap-1">
           {WEEKDAYS.map((d) => (
@@ -128,6 +128,7 @@ export default async function CalendarPage({
                 inMonth={d.getMonth() === month}
                 returnTo="/calendar"
                 items={items}
+                dense
               />
             );
           })}
