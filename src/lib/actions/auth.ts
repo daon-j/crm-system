@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { redirectWithFlash } from "@/lib/flash";
 import { prisma } from "@/lib/prisma";
 import { requireUser, verifyPassword, hashPassword, createSession, destroySession } from "@/lib/auth";
 
@@ -93,6 +94,7 @@ export async function updateProfile(formData: FormData) {
   });
   revalidatePath("/settings");
   revalidatePath("/");
+  redirectWithFlash("/settings", "프로필이 저장되었습니다");
 }
 
 export async function changePassword(

@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { redirectWithFlash } from "@/lib/flash";
 import { resolveBatchId } from "@/lib/batch";
 import { requireUser } from "@/lib/auth";
 import { encrypt } from "@/lib/encryption";
@@ -108,7 +108,7 @@ export async function createCustomer(formData: FormData) {
 
   revalidatePath("/customers");
   revalidatePath("/contracts");
-  redirect(`/customers/${customer.id}`);
+  redirectWithFlash(`/customers/${customer.id}`, "고객이 등록되었습니다");
 }
 
 export async function updateCustomer(customerId: string, formData: FormData) {
@@ -162,7 +162,7 @@ export async function updateCustomer(customerId: string, formData: FormData) {
 
   revalidatePath("/customers");
   revalidatePath(`/customers/${customerId}`);
-  redirect(`/customers/${customerId}`);
+  redirectWithFlash(`/customers/${customerId}`, "고객 정보가 수정되었습니다");
 }
 
 export async function deleteCustomer(customerId: string) {
@@ -171,7 +171,7 @@ export async function deleteCustomer(customerId: string) {
 
   await prisma.customer.delete({ where: { id: customerId } });
   revalidatePath("/customers");
-  redirect("/customers");
+  redirectWithFlash("/customers", "고객이 삭제되었습니다");
 }
 
 export async function addFamilyMember(customerId: string, formData: FormData) {

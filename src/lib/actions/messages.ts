@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { redirectWithFlash } from "@/lib/flash";
 import { fillTemplate, agentVars } from "@/lib/messageTemplate";
 import { requireUser } from "@/lib/auth";
 
@@ -31,7 +31,7 @@ export async function createManualMessage(formData: FormData) {
   });
 
   revalidatePath("/messages");
-  redirect("/messages");
+  redirectWithFlash("/messages", "문자가 등록되었습니다");
 }
 
 export async function sendMessage(messageId: string) {

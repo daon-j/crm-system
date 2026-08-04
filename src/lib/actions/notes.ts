@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { redirectWithFlash } from "@/lib/flash";
 import { syncStudyNoteToNotion } from "@/lib/notion";
 import { saveNoteAttachmentsFromFiles } from "@/lib/noteAttachments";
 import { requireUser } from "@/lib/auth";
@@ -39,6 +39,7 @@ export async function createStudyNote(formData: FormData) {
   await syncStudyNoteToNotion(note, attachments);
 
   revalidatePath("/notes");
+  redirectWithFlash("/notes", "노트가 저장되었습니다");
 }
 
 export async function updateStudyNote(noteId: string, formData: FormData) {
@@ -65,7 +66,7 @@ export async function updateStudyNote(noteId: string, formData: FormData) {
 
   revalidatePath("/notes");
   revalidatePath(`/notes/${noteId}/edit`);
-  redirect("/notes");
+  redirectWithFlash("/notes", "노트가 수정되었습니다");
 }
 
 export async function deleteStudyNote(noteId: string) {

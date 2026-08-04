@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { redirectWithFlash } from "@/lib/flash";
 import { requireUser } from "@/lib/auth";
 
 function str(formData: FormData, key: string): string | undefined {
@@ -45,7 +45,7 @@ export async function createContract(formData: FormData) {
 
   revalidatePath("/contracts");
   revalidatePath(`/customers/${customerId}`);
-  redirect(`/customers/${customerId}`);
+  redirectWithFlash(`/customers/${customerId}`, "계약이 등록되었습니다");
 }
 
 export async function updateContractStatus(contractId: string, status: string) {

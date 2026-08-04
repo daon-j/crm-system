@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { redirectWithFlash } from "@/lib/flash";
 import { requireUser } from "@/lib/auth";
 import { agentVars } from "@/lib/messageTemplate";
 
@@ -93,5 +93,5 @@ export async function createConsultation(formData: FormData) {
   revalidatePath("/messages");
   revalidatePath("/calendar");
   revalidatePath(`/customers/${customerId}`);
-  redirect(`/customers/${customerId}`);
+  redirectWithFlash(`/customers/${customerId}`, "상담내용이 저장되었습니다");
 }

@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { redirectWithFlash } from "@/lib/flash";
 import { requireUser } from "@/lib/auth";
 
 function str(formData: FormData, key: string): string | undefined {
@@ -46,7 +46,7 @@ export async function createEvent(formData: FormData) {
   revalidatePath("/calendar");
   revalidatePath("/");
   if (event.customerId) revalidatePath(`/customers/${event.customerId}`);
-  redirect(event.customerId ? `/customers/${event.customerId}` : "/calendar");
+  redirectWithFlash(event.customerId ? `/customers/${event.customerId}` : "/calendar", "일정이 등록되었습니다");
 }
 
 export async function updateEvent(eventId: string, formData: FormData) {
@@ -89,7 +89,7 @@ export async function updateEvent(eventId: string, formData: FormData) {
   revalidatePath("/calendar");
   revalidatePath("/");
   if (event.customerId) revalidatePath(`/customers/${event.customerId}`);
-  redirect(event.customerId ? `/customers/${event.customerId}` : "/calendar");
+  redirectWithFlash(event.customerId ? `/customers/${event.customerId}` : "/calendar", "일정이 변경되었습니다");
 }
 
 // 정보미팅/오전교육 참석 여부 수동 기록 - 있으면 학습노트 기반 자동판단보다 우선한다.
@@ -129,5 +129,5 @@ export async function cancelEvent(eventId: string, formData: FormData) {
   revalidatePath("/calendar");
   revalidatePath("/");
   if (event.customerId) revalidatePath(`/customers/${event.customerId}`);
-  redirect(event.customerId ? `/customers/${event.customerId}` : "/calendar");
+  redirectWithFlash(event.customerId ? `/customers/${event.customerId}` : "/calendar", "일정이 취소되었습니다");
 }

@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { redirectWithFlash } from "@/lib/flash";
 import { requireUser } from "@/lib/auth";
 
 function str(formData: FormData, key: string): string | undefined {
@@ -20,6 +21,7 @@ export async function createMessageTemplate(formData: FormData) {
 
   await prisma.messageTemplate.create({ data: { name, category, body, userId: user.id } });
   revalidatePath("/settings");
+  redirectWithFlash("/settings", "템플릿이 추가되었습니다");
 }
 
 export async function updateMessageTemplate(templateId: string, formData: FormData) {
@@ -32,6 +34,7 @@ export async function updateMessageTemplate(templateId: string, formData: FormDa
   });
   revalidatePath("/settings");
   revalidatePath("/messages");
+  redirectWithFlash("/settings", "템플릿이 저장되었습니다");
 }
 
 export async function deleteMessageTemplate(templateId: string) {
@@ -67,6 +70,7 @@ export async function createCallResultType(formData: FormData) {
   });
   revalidatePath("/settings");
   revalidatePath("/calls");
+  redirectWithFlash("/settings", "결과 유형이 추가되었습니다");
 }
 
 export async function deleteCallResultType(resultTypeId: string) {
