@@ -143,3 +143,24 @@ export async function cancelEvent(eventId: string, formData: FormData) {
       : "/calendar";
   redirectWithFlash(target, "일정이 취소되었습니다");
 }
+
+// 일정을 완전히 삭제한다 (잘못 입력한 건 등). 취소와 달리 기록을 남기지 않고
+// CalendarEvent 행 자체와 변경이력(CalendarEventLog)까지 함께 사라진다. 되돌릴 수 없다.
+export async function deleteEvent(eventId: string, formData: FormData) {
+  const user = await requireUser();
+
+  const existing = await prisma.calendarEvent.findFirstOrThrow({ where: { id: eventId, userId: user.id } });
+
+  await prisma.calendarEvent.delete({ where: { id: eventId } });
+
+  revalidatePath("/calendar");
+  revalidatePath("/");
+  if (existing.customerId) revalidatePath(`/customers/${existing.customerId}`);
+  const returnTo = str(formData, "returnTo");
+  const target = isSafeInternalPath(returnTo)
+    ? returnTo
+    : existing.customerId
+      ? `/customers/${existing.customerId}`
+      : "/calendar";
+  redirectWithFlash(target, "일정이 완전히 삭제되었습니다");
+}

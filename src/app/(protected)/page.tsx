@@ -28,75 +28,101 @@ export default async function DashboardPage() {
   todayEnd.setDate(todayEnd.getDate() + 1);
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
+  // now에서만 계산되고 다른 쿼리 결과에 의존하지 않으므로, 아래 메인 배치보다 먼저 정해둔다 -
+  // 그래야 미니 캘린더 조회(getCalendarItems)를 메인 배치와 동시에 시작할 수 있다.
+  const thisWeekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+  const miniStart = new Date(thisWeekStart);
+  miniStart.setDate(miniStart.getDate() - 7);
+  const miniDays = Array.from({ length: 21 }, (_, i) => {
+    const d = new Date(miniStart);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+  const miniEnd = miniDays[20];
+
+  // 예전에는 이 메인 배치가 끝난 뒤에 visitSeqMap 조회 → materializeRoutineEvents →
+  // 미니캘린더 조회가 순서대로(직렬로) 이어져서 원격 DB 왕복이 여러 번 누적됐다.
+  // 서로 결과에 의존하지 않는 두 작업(메인 배치 / 미니캘린더 조회)을 Promise.all로 묶어 동시에 실행한다.
   const [
-    totalCustomers,
-    mobileConsentCount,
-    allBatches,
-    allTodos,
-    gradeGroups,
-    pendingMessages,
-    pendingMessageCount,
-    todayVisits,
-    upcomingVisits,
-    allCustomersWithBirthday,
-    callTargets,
-    contractsByCategory,
-    newContractsThisMonth,
-    layout,
+    [
+      totalCustomers,
+      mobileConsentCount,
+      allBatches,
+      allTodos,
+      gradeGroups,
+      pendingMessages,
+      pendingMessageCount,
+      todayVisits,
+      upcomingVisits,
+      allCustomersWithBirthday,
+      callTargets,
+      contractsByCategory,
+      newContractsThisMonth,
+      layout,
+      visitSeqMap,
+    ],
+    miniItemsByDay,
   ] = await Promise.all([
-    prisma.customer.count({ where: { userId: user.id } }),
-    prisma.customer.count({ where: { userId: user.id, mobileConsent: true } }),
-    prisma.customerBatch.findMany({ where: { userId: user.id }, select: { id: true, name: true } }),
-    prisma.todo.findMany({ where: { userId: user.id } }),
-    prisma.customer.groupBy({ by: ["grade"], where: { userId: user.id }, _count: true }),
-    prisma.message.findMany({
-      where: { userId: user.id, status: "PENDING" },
-      include: { customer: true },
-      orderBy: { createdAt: "asc" },
-      take: 5,
-    }),
-    prisma.message.count({ where: { userId: user.id, status: "PENDING" } }),
-    prisma.calendarEvent.findMany({
-      where: { userId: user.id, type: "VISIT", status: "SCHEDULED", startAt: { gte: todayStart, lt: todayEnd } },
-      orderBy: { startAt: "asc" },
-      include: {
-        customer: {
-          include: {
-            contracts: { where: { status: "ACTIVE" } },
-            consultations: { orderBy: { createdAt: "desc" }, take: 1 },
-            referrals: { select: { id: true } },
+    Promise.all([
+      prisma.customer.count({ where: { userId: user.id } }),
+      prisma.customer.count({ where: { userId: user.id, mobileConsent: true } }),
+      prisma.customerBatch.findMany({ where: { userId: user.id }, select: { id: true, name: true } }),
+      prisma.todo.findMany({ where: { userId: user.id } }),
+      prisma.customer.groupBy({ by: ["grade"], where: { userId: user.id }, _count: true }),
+      prisma.message.findMany({
+        where: { userId: user.id, status: "PENDING" },
+        include: { customer: { select: { name: true } } },
+        orderBy: { createdAt: "asc" },
+        take: 5,
+      }),
+      prisma.message.count({ where: { userId: user.id, status: "PENDING" } }),
+      prisma.calendarEvent.findMany({
+        where: { userId: user.id, type: "VISIT", status: "SCHEDULED", startAt: { gte: todayStart, lt: todayEnd } },
+        orderBy: { startAt: "asc" },
+        include: {
+          customer: {
+            include: {
+              contracts: { where: { status: "ACTIVE" } },
+              consultations: { orderBy: { createdAt: "desc" }, take: 1 },
+              referrals: { select: { id: true } },
+            },
           },
         },
-      },
-    }),
-    prisma.calendarEvent.findMany({
-      where: { userId: user.id, type: "VISIT", status: "SCHEDULED", startAt: { gt: todayEnd } },
-      orderBy: { startAt: "asc" },
-      take: 10,
-      include: {
-        customer: {
-          include: {
-            contracts: { where: { status: "ACTIVE" } },
-            referrals: { select: { id: true } },
+      }),
+      prisma.calendarEvent.findMany({
+        where: { userId: user.id, type: "VISIT", status: "SCHEDULED", startAt: { gt: todayEnd } },
+        orderBy: { startAt: "asc" },
+        take: 10,
+        include: {
+          customer: {
+            include: {
+              contracts: { where: { status: "ACTIVE" } },
+              referrals: { select: { id: true } },
+            },
           },
         },
-      },
-    }),
-    prisma.customer.findMany({ where: { userId: user.id, birthDate: { not: null } } }),
-    prisma.consultation.findMany({
-      where: { nextContactDate: { gte: todayStart, lt: todayEnd }, customer: { userId: user.id } },
-      include: { customer: true },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.contract.groupBy({
-      by: ["category"],
-      where: { status: "ACTIVE", customer: { userId: user.id } },
-      _count: true,
-    }),
-    prisma.contract.count({
-      where: { source: "AGENT_SALE", joinDate: { gte: monthStart }, customer: { userId: user.id } },
-    }),
-    getDashboardLayout(user.id),
+      }),
+      prisma.customer.findMany({
+        where: { userId: user.id, birthDate: { not: null } },
+        select: { id: true, name: true, phone: true, birthDate: true },
+      }),
+      prisma.consultation.findMany({
+        where: { nextContactDate: { gte: todayStart, lt: todayEnd }, customer: { userId: user.id } },
+        include: { customer: true },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.contract.groupBy({
+        by: ["category"],
+        where: { status: "ACTIVE", customer: { userId: user.id } },
+        _count: true,
+      }),
+      prisma.contract.count({
+        where: { source: "AGENT_SALE", joinDate: { gte: monthStart }, customer: { userId: user.id } },
+      }),
+      getDashboardLayout(user.id),
+      getVisitSequenceMap(user.id),
+    ]),
+    getCalendarItems(miniStart, miniEnd, user.id),
   ]);
 
   // "이번달"은 등록일(createdAt) 기준이 아니라, 이번달에 회사에서 받은 고객DB 배치(예: "2026년 7월DB") 기준
@@ -121,17 +147,6 @@ export default async function DashboardPage() {
     return a.createdAt.getTime() - b.createdAt.getTime();
   });
 
-  const visitSeqMap = await getVisitSequenceMap(
-    Array.from(
-      new Set(
-        [...todayVisits, ...upcomingVisits]
-          .map((e) => e.customerId)
-          .filter((id): id is string => !!id),
-      ),
-    ),
-    user.id,
-  );
-
   const todayBirthdays = allCustomersWithBirthday.filter((c) => {
     const b = new Date(c.birthDate!);
     return b.getMonth() === now.getMonth() && b.getDate() === now.getDate();
@@ -145,17 +160,6 @@ export default async function DashboardPage() {
   });
 
   const gradeMap = Object.fromEntries(gradeGroups.map((g) => [g.grade, g._count]));
-
-  const thisWeekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
-  const miniStart = new Date(thisWeekStart);
-  miniStart.setDate(miniStart.getDate() - 7);
-  const miniDays = Array.from({ length: 21 }, (_, i) => {
-    const d = new Date(miniStart);
-    d.setDate(d.getDate() + i);
-    return d;
-  });
-  const miniEnd = miniDays[20];
-  const miniItemsByDay = await getCalendarItems(miniStart, miniEnd, user.id);
 
   const sections: Record<DashboardSectionKey, ReactNode> = {
     todayVisits:
@@ -578,31 +582,8 @@ export default async function DashboardPage() {
             캘린더 전체보기 →
           </Link>
         </div>
-        {/* 모바일: 칸마다 실제 일정 텍스트 표시 */}
-        <div className="lg:hidden grid grid-cols-7 gap-1">
-          {WEEKDAYS.map((d) => (
-            <div key={`m-${d}`} className="pb-1 text-center text-[11px] font-medium text-ink-muted">
-              {d}
-            </div>
-          ))}
-          {miniDays.map((d) => {
-            const key = dateKey(d);
-            return (
-              <CalendarDayCell
-                key={`m-${key}`}
-                dayNum={d.getDate()}
-                label={`${d.getMonth() + 1}월 ${d.getDate()}일 (${WEEKDAYS[d.getDay()]})`}
-                isToday={key === dateKey(now)}
-                inMonth
-                returnTo="/"
-                items={miniItemsByDay.get(key) ?? []}
-                dense
-              />
-            );
-          })}
-        </div>
-        {/* 데스크탑: 기존 점 표시 그대로 유지 */}
-        <div className="hidden lg:grid grid-cols-7 gap-1">
+        {/* 모바일·데스크탑 공통: 칸마다 실제 일정 텍스트 표시 */}
+        <div className="grid grid-cols-7 gap-1">
           {WEEKDAYS.map((d) => (
             <div key={d} className="pb-1 text-center text-[11px] font-medium text-ink-muted">
               {d}
@@ -619,6 +600,7 @@ export default async function DashboardPage() {
                 inMonth
                 returnTo="/"
                 items={miniItemsByDay.get(key) ?? []}
+                dense
               />
             );
           })}

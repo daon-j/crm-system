@@ -14,17 +14,17 @@ export function agentVars(user: { name: string | null; phone: string | null; ext
 
 // 템플릿 목록 화면에서 카테고리를 이 순서로 묶어서 보여줌 (여기 없는 카테고리는 뒤에 등장 순서대로)
 export const TEMPLATE_CATEGORY_ORDER = [
+  "방문확정",
+  "부재중(당일)",
+  "부재중(2차+)",
+  "미팅후",
+  "일정조율",
   "생일",
   "월간안부",
   "만기알림",
   "담당배정",
   "통화감사",
   "지인관리",
-  "방문확정",
-  "부재중(당일)",
-  "부재중(2차+)",
-  "일정조율",
-  "미팅후",
 ];
 
 export function sortCategories(categories: string[]): string[] {

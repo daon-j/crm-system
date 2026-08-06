@@ -5,6 +5,7 @@ import { toDateTimeInputValue, formatDateTime } from "@/lib/format";
 import { updateEvent, cancelEvent } from "@/lib/actions/calendar";
 import { requireUser } from "@/lib/auth";
 import { isSafeInternalPath } from "@/lib/flash";
+import DeleteEventButton from "@/components/DeleteEventButton";
 
 export default async function EditCalendarEventPage({
   params,
@@ -218,6 +219,15 @@ export default async function EditCalendarEventPage({
             이 일정 취소하기
           </button>
         </form>
+      </div>
+
+      <div className="mt-4 rounded-xl border border-border bg-surface-muted p-4">
+        <p className="text-sm font-medium text-ink-2 mb-1">완전 삭제</p>
+        <p className="text-xs text-ink-muted mb-3">
+          잘못 입력해서 기록조차 남길 필요가 없는 경우에만 사용하세요. 취소와 달리 이 일정과 변경이력이
+          전부 사라지며 되돌릴 수 없습니다.
+        </p>
+        <DeleteEventButton eventId={event.id} returnTo={isSafeInternalPath(from) ? from : undefined} />
       </div>
     </div>
   );

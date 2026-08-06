@@ -165,3 +165,11 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
+
+/* <select>를 열었을 때 나오는 옵션 목록은 브라우저가 직접 그려서 color-scheme만으로는
+   테마가 일관되게 반영되지 않는다. 배경/글자색을 명시해서 다크모드에서도 항상 대비가 유지되게 함. */
+select,
+select option {
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+}

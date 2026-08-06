@@ -55,11 +55,11 @@ async function materializeRoutineEvents(rangeStart: Date, rangeEnd: Date, userId
 
 // 고객별 VISIT 이벤트를 시간순으로 정렬해 몇 번째 방문인지(1차/2차/...) 매핑을 만든다.
 // 완료 여부와 무관하게 예정된 방문도 포함해서 "이번이 몇 번째 만남인지"를 셈한다.
-export async function getVisitSequenceMap(customerIds: string[], userId: string): Promise<Map<string, number>> {
-  if (customerIds.length === 0) return new Map();
-
+// customerIds로 범위를 좁히면 호출부가 그 목록을 먼저 구해야 해서(다른 쿼리 결과에 의존) 병렬 실행이 막히므로,
+// 이 설계사의 예정 방문 전체를 한 번에 가져와 다른 대시보드 쿼리들과 나란히 돌 수 있게 한다.
+export async function getVisitSequenceMap(userId: string): Promise<Map<string, number>> {
   const events = await prisma.calendarEvent.findMany({
-    where: { userId, type: "VISIT", status: "SCHEDULED", customerId: { in: customerIds } },
+    where: { userId, type: "VISIT", status: "SCHEDULED" },
     orderBy: { startAt: "asc" },
     select: { id: true, customerId: true },
   });
@@ -91,7 +91,10 @@ export async function getCalendarItems(
       where: { userId, status: "SCHEDULED", startAt: { gte: rangeStart, lte: rangeEnd } },
       include: { customer: true },
     }),
-    prisma.customer.findMany({ where: { userId, birthDate: { not: null } } }),
+    prisma.customer.findMany({
+      where: { userId, birthDate: { not: null } },
+      select: { id: true, name: true, birthDate: true },
+    }),
     prisma.contract.findMany({
       where: { status: "ACTIVE", expiryDate: { gte: rangeStart, lte: rangeEnd }, customer: { userId } },
       include: { customer: true },
@@ -120,10 +123,7 @@ export async function getCalendarItems(
     return type === "MEETING" ? meetingNoteDays.has(dateKey(d)) : trainingNoteDays.has(dateKey(d));
   }
 
-  const visitCustomerIds = Array.from(
-    new Set(events.filter((e) => e.type === "VISIT" && e.customerId).map((e) => e.customerId as string)),
-  );
-  const visitSeqMap = await getVisitSequenceMap(visitCustomerIds, userId);
+  const visitSeqMap = await getVisitSequenceMap(userId);
 
   const itemsByDay = new Map<string, DayItem[]>();
   const pushItem = (d: Date, item: DayItem) => {

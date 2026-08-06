@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { previewFill, sortCategories } from "@/lib/messageTemplate";
+import { previewFill, sortCategories, TEMPLATE_CATEGORY_ORDER } from "@/lib/messageTemplate";
 
 type TemplateOption = { id: string; name: string; category: string; body: string };
 
@@ -25,11 +25,21 @@ export default function TemplatePickerDialog({
   const selected = templates.find((t) => t.id === selectedId) ?? null;
   const categories = useMemo(() => ["전체", ...sortCategories([...new Set(templates.map((t) => t.category))])], [templates]);
 
-  const filtered = templates.filter((t) => {
-    if (activeCategory !== "전체" && t.category !== activeCategory) return false;
-    if (query.trim() && !t.name.includes(query.trim()) && !t.body.includes(query.trim())) return false;
-    return true;
-  });
+  const filtered = templates
+    .filter((t) => {
+      if (activeCategory !== "전체" && t.category !== activeCategory) return false;
+      if (query.trim() && !t.name.includes(query.trim()) && !t.body.includes(query.trim())) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      // "전체" 탭에서도 방문확정/부재중 등 우선순위 카테고리가 먼저 보이도록 정렬
+      const ia = TEMPLATE_CATEGORY_ORDER.indexOf(a.category);
+      const ib = TEMPLATE_CATEGORY_ORDER.indexOf(b.category);
+      if (ia === -1 && ib === -1) return 0;
+      if (ia === -1) return 1;
+      if (ib === -1) return -1;
+      return ia - ib;
+    });
 
   function pick(id: string) {
     onSelect(id);
